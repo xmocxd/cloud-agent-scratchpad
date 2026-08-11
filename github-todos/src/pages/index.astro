@@ -1,0 +1,120 @@
+---
+export const prerender = false;
+
+import '../styles/global.css';
+import { listOpenIssues, repoName, type Issue } from '../lib/github';
+
+let issues: Issue[] = [];
+let error = '';
+
+try {
+	issues = await listOpenIssues();
+} catch (e) {
+	error = e instanceof Error ? e.message : 'Failed to load issues';
+}
+
+function isBug(issue: Issue) {
+	return issue.labels.some((l) => /bug/i.test(l.name));
+}
+
+function isTodo(issue: Issue) {
+	return issue.labels.some((l) => /(todo|task)/i.test(l.name));
+}
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="robots" content="noindex" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+		<title>GitHub Todos</title>
+	</head>
+	<body>
+		<main>
+			<header>
+				<h1>GitHub Todos</h1>
+				<p>
+					Open issues across your public and private repos, aggregated via the
+					GitHub Issues API. Gate this Worker with Cloudflare Access.
+				</p>
+			</header>
+
+			{
+				error ? (
+					<p class="error">{error}</p>
+				) : (
+					<>
+						<div class="toolbar" role="group" aria-label="Filter">
+							<button type="button" data-filter="all" aria-pressed="true">All</button>
+							<button type="button" data-filter="bug" aria-pressed="false">Bugs</button>
+							<button type="button" data-filter="todo" aria-pressed="false">Todos</button>
+						</div>
+						<p class="meta"><span id="count">{issues.length}</span> open</p>
+						{
+							issues.length === 0 ? (
+								<p class="empty">No open issues found.</p>
+							) : (
+								<ul class="list" id="issues">
+									{issues.map((issue) => (
+										<li
+											data-bug={isBug(issue) ? '1' : '0'}
+											data-todo={isTodo(issue) ? '1' : '0'}
+										>
+											<a href={issue.html_url} target="_blank" rel="noreferrer">
+												<span class="repo">{repoName(issue.repository_url)}</span>
+												<span class="title">
+													#{issue.number} {issue.title}
+												</span>
+												<span class="row">
+													{issue.labels.map((label) => (
+														<span class="label">{label.name}</span>
+													))}
+													<span class="when">
+														{new Date(issue.updated_at).toLocaleDateString()}
+													</span>
+												</span>
+											</a>
+										</li>
+									))}
+								</ul>
+							)
+						}
+					</>
+				)
+			}
+		</main>
+
+		<script>
+			const buttons = document.querySelectorAll<HTMLButtonElement>('.toolbar button');
+			const items = document.querySelectorAll<HTMLLIElement>('#issues li');
+			const count = document.querySelector('#count');
+
+			function apply(filter: string) {
+				let visible = 0;
+				for (const item of items) {
+					const show =
+						filter === 'all' ||
+						(filter === 'bug' && item.dataset.bug === '1') ||
+						(filter === 'todo' && item.dataset.todo === '1');
+					item.hidden = !show;
+					if (show) visible += 1;
+				}
+				if (count) count.textContent = String(visible);
+				for (const button of buttons) {
+					button.setAttribute('aria-pressed', String(button.dataset.filter === filter));
+				}
+			}
+
+			for (const button of buttons) {
+				button.addEventListener('click', () => apply(button.dataset.filter || 'all'));
+			}
+		</script>
+	</body>
+</html>
