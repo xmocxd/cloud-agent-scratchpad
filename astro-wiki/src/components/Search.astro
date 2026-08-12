@@ -1,0 +1,99 @@
+---
+interface SearchItem {
+	id: string;
+	title: string;
+	description: string;
+	href: string;
+	order: number;
+	body: string;
+}
+
+interface Props {
+	index: SearchItem[];
+}
+
+const { index } = Astro.props;
+---
+
+<div class="search" data-search>
+	<label class="nav-label" for="wiki-search">Search</label>
+	<input
+		id="wiki-search"
+		type="search"
+		placeholder="Search chapters…"
+		autocomplete="off"
+		data-search-input
+	/>
+	<ul class="search-results" data-search-results></ul>
+	<script type="application/json" data-search-index set:html={JSON.stringify(index)} />
+</div>
+
+<script>
+	const root = document.querySelector('[data-search]');
+	const input = root?.querySelector('[data-search-input]');
+	const results = root?.querySelector('[data-search-results]');
+	const raw = root?.querySelector('[data-search-index]');
+	if (root && input && results && raw) {
+		const index = JSON.parse(raw.textContent || '[]');
+		const items = index.map((item) => ({
+			...item,
+			haystack: `${item.title} ${item.description} ${item.body}`.toLowerCase(),
+		}));
+
+		function escapeHtml(value) {
+			return value
+				.replaceAll('&', '&amp;')
+				.replaceAll('<', '&lt;')
+				.replaceAll('>', '&gt;')
+				.replaceAll('"', '&quot;');
+		}
+
+		function render(query) {
+			const q = query.trim().toLowerCase();
+			if (!q) {
+				results.innerHTML = '';
+				results.dataset.open = 'false';
+				return;
+			}
+
+			const matches = items.filter((item) => item.haystack.includes(q)).slice(0, 8);
+
+			if (matches.length === 0) {
+				results.innerHTML = `<li class="search-empty">No chapters match “${escapeHtml(query.trim())}”.</li>`;
+			} else {
+				results.innerHTML = matches
+					.map(
+						(item) => `
+							<li>
+								<a href="${item.href}">
+									<strong>${escapeHtml(item.title)}</strong>
+									<span class="meta">Chapter ${String(item.order).padStart(2, '0')}${
+										item.description ? ` · ${escapeHtml(item.description)}` : ''
+									}</span>
+								</a>
+							</li>
+						`,
+					)
+					.join('');
+			}
+
+			results.dataset.open = 'true';
+		}
+
+		input.addEventListener('input', () => render(input.value));
+		input.addEventListener('focus', () => {
+			if (input.value.trim()) render(input.value);
+		});
+		input.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape') {
+				input.value = '';
+				render('');
+				input.blur();
+			}
+		});
+
+		document.addEventListener('click', (event) => {
+			if (!root.contains(event.target)) results.dataset.open = 'false';
+		});
+	}
+</script>

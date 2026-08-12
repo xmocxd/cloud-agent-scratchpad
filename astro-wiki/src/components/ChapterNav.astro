@@ -1,0 +1,31 @@
+---
+import type { Chapter } from '../lib/wiki';
+import { chapterHref } from '../lib/wiki';
+
+interface Props {
+	chapters: Chapter[];
+}
+
+const { chapters } = Astro.props;
+const currentPath = Astro.url.pathname.replace(/\/$/, '') + '/';
+---
+
+<ul class="chapter-nav">
+	{
+		chapters.map((chapter) => {
+			const href = chapterHref(chapter);
+			const current = currentPath === href;
+			return (
+				<li>
+					<a href={href} aria-current={current ? 'page' : undefined}>
+						<span class="num">{String(chapter.data.order).padStart(2, '0')}</span>
+						<span class="title">
+							{chapter.data.title}
+							{chapter.data.starred && <span class="star-dot" title="Starred" />}
+						</span>
+					</a>
+				</li>
+			);
+		})
+	}
+</ul>

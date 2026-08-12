@@ -1,0 +1,55 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getChapters, chapterHref } from '../../lib/wiki';
+
+export async function getStaticPaths() {
+	const chapters = await getCollection('chapters');
+	return chapters.map((chapter) => ({
+		params: { slug: chapter.id },
+		props: { chapter },
+	}));
+}
+
+const { chapter } = Astro.props;
+const chapters = await getChapters();
+const index = chapters.findIndex((entry) => entry.id === chapter.id);
+const prev = index > 0 ? chapters[index - 1] : undefined;
+const next = index < chapters.length - 1 ? chapters[index + 1] : undefined;
+const { Content } = await render(chapter);
+---
+
+<BaseLayout title={chapter.data.title} description={chapter.data.description}>
+	<article>
+		<header class="chapter-header">
+			<p class="chapter-kicker">Chapter {String(chapter.data.order).padStart(2, '0')}</p>
+			<h1>{chapter.data.title}</h1>
+			{chapter.data.description && <p>{chapter.data.description}</p>}
+		</header>
+
+		<div class="prose">
+			<Content />
+		</div>
+
+		<nav class="chapter-pager" aria-label="Chapter pagination">
+			{
+				prev ? (
+					<a href={chapterHref(prev)}>
+						<span class="dir">Previous</span>
+						{prev.data.title}
+					</a>
+				) : (
+					<span />
+				)
+			}
+			{
+				next && (
+					<a class="next" href={chapterHref(next)}>
+						<span class="dir">Next</span>
+						{next.data.title}
+					</a>
+				)
+			}
+		</nav>
+	</article>
+</BaseLayout>

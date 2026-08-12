@@ -1,0 +1,65 @@
+---
+import '../styles/global.css';
+import ChapterNav from '../components/ChapterNav.astro';
+import Search from '../components/Search.astro';
+import { getChapters, buildSearchIndex } from '../lib/wiki';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const { title = 'Astro Wiki', description = 'A chaptered markdown wiki with search and automatic cross-links.' } = Astro.props;
+const chapters = await getChapters();
+const searchIndex = buildSearchIndex(chapters);
+const pageTitle = title === 'Astro Wiki' ? title : `${title} · Astro Wiki`;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<title>{pageTitle}</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Manrope:wght@400;600;700&family=Syne:wght@700;800&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<button class="mobile-nav-toggle" type="button" data-nav-toggle aria-controls="site-sidebar" aria-expanded="false">
+			Chapters
+		</button>
+		<div class="shell">
+			<aside class="sidebar" id="site-sidebar" data-sidebar>
+				<a class="brand" href="/">
+					<span class="brand-mark">Astro <span>Wiki</span></span>
+					<span class="brand-sub">Chaptered notes</span>
+				</a>
+				<Search index={searchIndex} />
+				<div>
+					<p class="nav-label">Chapters</p>
+					<ChapterNav chapters={chapters} />
+				</div>
+			</aside>
+			<main class="main">
+				<slot />
+			</main>
+		</div>
+		<script>
+			const toggle = document.querySelector('[data-nav-toggle]');
+			const sidebar = document.querySelector('[data-sidebar]');
+			toggle?.addEventListener('click', () => {
+				const open = sidebar?.getAttribute('data-open') === 'true';
+				sidebar?.setAttribute('data-open', open ? 'false' : 'true');
+				toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+			});
+		</script>
+	</body>
+</html>
