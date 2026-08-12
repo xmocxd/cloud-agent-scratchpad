@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getChapters, getStarredChapters, chapterHref } from '../lib/wiki';
+
+const starred = await getStarredChapters();
+const chapters = await getChapters();
+const firstChapter = chapters[0];
+---
+
+<BaseLayout title="Astro Wiki" description="A chaptered markdown wiki with search, starred quick links, and automatic cross-links.">
+	<section class="hero panel">
+		<h1 class="hero-brand">Astro Wiki</h1>
+		<p class="hero-lead">
+			Markdown chapters, compiled to HTML — with navigation, search, and automatic first-mention links across the book.
+		</p>
+		<div class="hero-actions">
+			{
+				firstChapter && (
+					<a class="button button-primary" href={chapterHref(firstChapter)}>
+						Start reading
+					</a>
+				)
+			}
+			<a class="button button-ghost" href="#quick-links">Quick links</a>
+		</div>
+	</section>
+
+	<section class="section panel" id="quick-links">
+		<h2>Quick links</h2>
+		<p class="section-lead">
+			Starred chapters from front matter (<code>starred: true</code>) surface here for fast access.
+		</p>
+		{
+			starred.length > 0 ? (
+				<ul class="quick-links">
+					{starred.map((chapter) => (
+						<li>
+							<a href={chapterHref(chapter)}>
+								<span>
+									<span class="ql-title">{chapter.data.title}</span>
+									{chapter.data.description && <span class="ql-desc">{chapter.data.description}</span>}
+								</span>
+								<span class="ql-meta">Starred · {String(chapter.data.order).padStart(2, '0')}</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			) : (
+				<p class="section-lead">No starred chapters yet. Add <code>starred: true</code> to a chapter’s front matter.</p>
+			)
+		}
+	</section>
+</BaseLayout>

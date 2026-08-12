@@ -5,4 +5,4 @@ Scratchpad for cloud-agent experiments.
 ## Projects
 
 - [`github-todos/`](./github-todos) — Astro dashboard that aggregates open GitHub issues across your public and private repos, deployed to Cloudflare Workers and gated with Cloudflare Access.
-- [`astro-wiki/`](./astro-wiki) — Placeholder for an Astro wiki project.
+- [`astro-wiki/`](./astro-wiki) — Astro markdown wiki with chapter nav, search, starred quick links, and auto cross-links
