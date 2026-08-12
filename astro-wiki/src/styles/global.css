@@ -116,7 +116,20 @@ img {
 
 .main {
 	min-width: 0;
-	padding: 2rem clamp(1.25rem, 4vw, 3.5rem) 4rem;
+	padding: 0 0 4rem;
+}
+
+.main > .hero {
+	margin: 0;
+}
+
+.main > :not(.hero) {
+	padding-left: clamp(1.25rem, 4vw, 3.5rem);
+	padding-right: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.main > article {
+	padding-top: 2rem;
 }
 
 .panel {
@@ -263,13 +276,14 @@ img {
 .hero {
 	position: relative;
 	overflow: hidden;
-	padding: clamp(2rem, 5vw, 4rem);
-	min-height: min(72vh, 38rem);
+	padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3.5rem);
+	min-height: min(92vh, 44rem);
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
 	gap: 1rem;
 	isolation: isolate;
+	border-bottom: 1px solid var(--line);
 }
 
 .hero::before {
@@ -359,8 +373,9 @@ img {
 }
 
 .section {
-	margin-top: 2rem;
-	padding: clamp(1.4rem, 3vw, 2rem);
+	margin-top: 2.5rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
 }
 
 .section h2 {
@@ -582,6 +597,10 @@ img {
 		transform: translateX(0);
 	}
 
+	.main {
+		padding-top: 0;
+	}
+
 	.mobile-nav-toggle {
 		display: inline-flex;
 		position: fixed;
@@ -597,11 +616,8 @@ img {
 		cursor: pointer;
 	}
 
-	.main {
-		padding-top: 4rem;
-	}
-
 	.hero {
-		min-height: 70vh;
+		min-height: 78vh;
+		padding-top: 4.5rem;
 	}
 }

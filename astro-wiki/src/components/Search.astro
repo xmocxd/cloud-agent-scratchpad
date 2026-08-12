@@ -24,67 +24,76 @@ const { index } = Astro.props;
 		autocomplete="off"
 		data-search-input
 	/>
-	<ul class="search-results" data-search-results hidden></ul>
+	<ul class="search-results" data-search-results></ul>
+	<script type="application/json" data-search-index set:html={JSON.stringify(index)} />
 </div>
 
-<script define:vars={{ index }}>
+<script>
 	const root = document.querySelector('[data-search]');
 	const input = root?.querySelector('[data-search-input]');
 	const results = root?.querySelector('[data-search-results]');
-	if (!root || !input || !results) throw new Error('Search UI missing');
+	const raw = root?.querySelector('[data-search-index]');
+	if (root && input && results && raw) {
+		const index = JSON.parse(raw.textContent || '[]');
+		const items = index.map((item) => ({
+			...item,
+			haystack: `${item.title} ${item.description} ${item.body}`.toLowerCase(),
+		}));
 
-	const items = index.map((item) => ({
-		...item,
-		haystack: `${item.title} ${item.description} ${item.body}`.toLowerCase(),
-	}));
-
-	function render(query) {
-		const q = query.trim().toLowerCase();
-		if (!q) {
-			results.innerHTML = '';
-			results.dataset.open = 'false';
-			results.hidden = true;
-			return;
+		function escapeHtml(value) {
+			return value
+				.replaceAll('&', '&amp;')
+				.replaceAll('<', '&lt;')
+				.replaceAll('>', '&gt;')
+				.replaceAll('"', '&quot;');
 		}
 
-		const matches = items
-			.filter((item) => item.haystack.includes(q))
-			.slice(0, 8);
+		function render(query) {
+			const q = query.trim().toLowerCase();
+			if (!q) {
+				results.innerHTML = '';
+				results.dataset.open = 'false';
+				return;
+			}
 
-		if (matches.length === 0) {
-			results.innerHTML = `<li class="search-empty">No chapters match “${query.trim()}”.</li>`;
-		} else {
-			results.innerHTML = matches
-				.map(
-					(item) => `
-						<li>
-							<a href="${item.href}">
-								<strong>${item.title}</strong>
-								<span class="meta">Chapter ${String(item.order).padStart(2, '0')}${item.description ? ` · ${item.description}` : ''}</span>
-							</a>
-						</li>
-					`,
-				)
-				.join('');
+			const matches = items.filter((item) => item.haystack.includes(q)).slice(0, 8);
+
+			if (matches.length === 0) {
+				results.innerHTML = `<li class="search-empty">No chapters match “${escapeHtml(query.trim())}”.</li>`;
+			} else {
+				results.innerHTML = matches
+					.map(
+						(item) => `
+							<li>
+								<a href="${item.href}">
+									<strong>${escapeHtml(item.title)}</strong>
+									<span class="meta">Chapter ${String(item.order).padStart(2, '0')}${
+										item.description ? ` · ${escapeHtml(item.description)}` : ''
+									}</span>
+								</a>
+							</li>
+						`,
+					)
+					.join('');
+			}
+
+			results.dataset.open = 'true';
 		}
 
-		results.hidden = false;
-		results.dataset.open = 'true';
+		input.addEventListener('input', () => render(input.value));
+		input.addEventListener('focus', () => {
+			if (input.value.trim()) render(input.value);
+		});
+		input.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape') {
+				input.value = '';
+				render('');
+				input.blur();
+			}
+		});
+
+		document.addEventListener('click', (event) => {
+			if (!root.contains(event.target)) results.dataset.open = 'false';
+		});
 	}
-
-	input.addEventListener('input', () => render(input.value));
-	input.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			input.value = '';
-			render('');
-			input.blur();
-		}
-	});
-
-	document.addEventListener('click', (event) => {
-		if (!root.contains(event.target)) {
-			results.dataset.open = 'false';
-			results.hidden = true;
-		}
-	});
 </script>
