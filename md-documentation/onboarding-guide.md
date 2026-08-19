@@ -150,25 +150,39 @@ After restarting, all the repository files will appear in the left sidebar.
 
 ## Part 2: Day-to-Day Workflow
 
-Every time you want to contribute changes, follow these steps.
+Each round of contribution follows the same four steps. After submitting a PR, come back to Step 1 and start a fresh branch for your next section of work.
+
+```
+Step 1 → Create branch
+Step 2 → Write and push (repeat as often as you like)
+Step 3 → Open a PR when ready for review
+Step 4 → Start over at Step 1 for more work
+```
 
 ---
 
-### Step 1 — Create a new branch
+### Step 1 — Create a new branch from main
 
-A branch is your own private workspace. Your changes stay isolated until you ask for them to be reviewed.
+A branch is your own private workspace. Your changes are kept separate from everyone else's work until you decide to submit them for review.
 
-1. Open the **Command palette** (press `Ctrl+P` on Windows or `Cmd+P` on Mac)
-2. Type `create new branch` and select **Obsidian Git: Create new branch**
-3. Enter a short descriptive name for your branch — use hyphens, no spaces  
-   Examples: `add-faq-page`, `update-installation-guide`, `fix-typo-readme`
-4. Press Enter
+**Name your branch using your name and today's date**, so it is easy to identify who is working on what.
 
-You are now working on your own branch. The branch name appears in the bottom status bar.
+Format: `firstname-lastname-YYYY-MM-DD`  
+Examples: `jane-smith-2026-08-19`, `alex-jones-2026-11-03`
+
+To create the branch:
+
+1. First, make sure you are starting from the latest version of `main`. Open the **Command palette** (`Ctrl+P` / `Cmd+P`), type `checkout`, and select **Obsidian Git: Switch to remote branch** — choose `main` from the list.
+2. Open the Command palette again, type `create new branch`, and select **Obsidian Git: Create new branch**
+3. Type your branch name in the format above (e.g. `jane-smith-2026-08-19`) and press Enter
+
+The branch name now appears in the bottom status bar of Obsidian. You are ready to work.
+
+> If you already have a branch open from a previous session that has not been submitted yet, you can continue on it instead of creating a new one — skip to Step 2.
 
 ---
 
-### Step 2 — Write or edit your Markdown files
+### Step 2 — Write, edit, and push your changes
 
 Use the left sidebar to navigate files. Click any `.md` file to open it.
 
@@ -179,58 +193,78 @@ Use the left sidebar to navigate files. Click any `.md` file to open it.
 
 To toggle, click the book icon in the top-right corner of the editor, or open the Command palette and type `toggle live preview`.
 
-**Tips:**
+**Tips for writing:**
 - Use `Ctrl+N` (Windows) or `Cmd+N` (Mac) to create a new file
-- File names become the page title — use lowercase with hyphens: `my-new-page.md`
-- Save with `Ctrl+S` / `Cmd+S` (Obsidian also auto-saves)
+- File names should use lowercase with hyphens: `my-new-page.md`
+- Save with `Ctrl+S` / `Cmd+S` (Obsidian also auto-saves locally)
 
 **File naming conventions for this repository:**
-- All lowercase
-- Words separated by hyphens: `getting-started.md`, `api-reference.md`
-- No spaces or special characters
+- All lowercase, words separated by hyphens: `getting-started.md`, `api-reference.md`
+- No spaces or special characters in file names
 - Place files in the correct folder — ask if you are unsure where something belongs
 
 ---
 
-### Step 3 — Commit and push your changes
+**Push your changes regularly — at least once a day.**
 
-When you are ready to submit your work, use the **Source Control panel**:
+Pushing saves your work to GitHub as a cloud backup. You do not need to be finished to push — push whenever you want to save your progress.
 
-1. Click the **branch/source control icon** in the left ribbon (it looks like a circle with arrows, or a Git branch icon) — this opens the Source Control panel
+To push:
+
+1. Click the **source control icon** in the left ribbon (branch/arrows icon) — this opens the Source Control panel
 2. You will see a list of your changed files
-3. In the **Commit message** box at the top of the panel, type a short description of what you changed  
-   Examples: `Add FAQ page`, `Fix broken link in README`, `Update installation steps`
-4. Click the **Commit-and-sync** button (the cloud/upload icon at the top of the panel)
+3. In the **Commit message** box at the top of the panel, type a brief note on what you worked on  
+   Examples: `Draft section 2`, `Work in progress — FAQ page`, `End of day backup`
+4. Click the **Commit-and-sync** button (cloud/upload icon at the top of the panel)
 
-Obsidian Git will commit your changes and push the branch to GitHub.
+Your work is now safely backed up to GitHub on your branch.
 
-> **Alternative:** You can also use the ribbon button at the very top of the left sidebar — look for the Git icon that shows a tooltip of "Commit-and-sync" when you hover over it. One click runs the full commit, pull, and push sequence using the last commit message.
+> **Shortcut:** There is also a single Git ribbon button at the very top of the left sidebar. Hover over it to confirm the tooltip says "Commit-and-sync", then click it to push with one click using your last commit message.
 
-> **Can't find the panel?** Press `Ctrl+P` / `Cmd+P`, type `source control`, and select **Obsidian Git: Open source control view**.
-
----
-
-### Step 4 — Open a Pull Request
-
-1. Look for the **GitHub Tools** icon in the left sidebar (it looks like the GitHub logo) and click it
-2. In the sidebar panel, click **Create PR**
-3. A modal will appear pre-filled with a title based on your branch name — edit it to be descriptive if needed
-4. Click **Create** — your browser will open to the GitHub Pull Request page, already filled in
-5. Add any additional description in the text box on GitHub if helpful
-6. Click **Create pull request**
-
-Your changes are now submitted for review. The repository maintainer will receive a notification and either approve the PR, request changes, or leave comments.
+> **Can't find the Source Control panel?** Press `Ctrl+P` / `Cmd+P`, type `source control`, and select **Obsidian Git: Open source control view**.
 
 ---
 
-### Step 5 — Responding to review feedback
+### Step 3 — Submit your work for review (open a Pull Request)
 
-If the reviewer asks for changes:
+When you have finished a section and are ready for it to be reviewed, open a Pull Request (PR). A PR is a request for the maintainer to review your branch and merge it into the main documentation.
 
-1. Go back to Obsidian — you are still on your branch
-2. Make the requested edits
-3. Repeat the commit step (open the Source Control panel, write a message, click Commit-and-sync) — your existing PR updates automatically
-4. Leave a comment on the PR on GitHub to let the reviewer know you have addressed their feedback
+**You do not need to wait until everything is perfect** — open a PR when a logical section is complete. The reviewer handles any merge conflicts with other contributors' work.
+
+1. Make sure you have pushed all your latest changes first (repeat Step 2 if needed)
+2. Click the **GitHub Tools** icon in the left sidebar (the GitHub logo) to open its panel
+3. Click **Create PR**
+4. A modal appears pre-filled with a title based on your branch name — edit the title to briefly describe what this PR contains  
+   Examples: `Jane Smith — Add FAQ section`, `Alex Jones — Update installation guide`
+5. Click **Create** — your browser opens to the GitHub Pull Request page, already filled in
+6. Add a short description in the text box explaining what you worked on and anything the reviewer should know
+7. Click **Create pull request**
+
+The maintainer will receive a notification and will review, request changes, or approve and merge your work.
+
+---
+
+### Step 4 — Continue working: start a new branch
+
+Once you have submitted your PR, **do not keep editing on the same branch** — that branch is now under review.
+
+To continue working on other content:
+
+1. Go back to **Step 1** and create a new branch with today's date
+2. Work and push as normal on the new branch
+3. Open a new PR when that section is ready
+
+Each PR represents one logical unit of work (a section, a page, an update). This keeps reviews focused and manageable.
+
+---
+
+### What happens after your PR is submitted?
+
+- The maintainer reviews your changes on GitHub
+- They may approve and merge it, or leave comments asking for small adjustments
+- If changes are requested, you will get an email notification from GitHub
+- To make edits: switch back to your original branch in Obsidian (Command palette → **Switch to remote branch** → select your branch), make the changes, push, and the PR updates automatically
+- Once merged, your content is live in `main`
 
 ---
 
@@ -240,7 +274,10 @@ If the reviewer asks for changes:
 Your token may have expired. Generate a new one following the token steps in Part 1 above and update it in both the Obsidian Git settings (Settings → Git → Password/Token) and the obsidian-github-tools settings.
 
 **"Cannot push to this branch" / branch is protected**  
-You are likely trying to push directly to `main`. Make sure you created a new branch in Step 1 before making changes.
+You are likely trying to push directly to `main`. Make sure you created a new branch in Step 1 of the workflow before making changes. Check the branch name in the bottom status bar — if it says `main`, open the Command palette and run **Obsidian Git: Create new branch** to start a fresh branch.
+
+**I submitted a PR but want to keep editing on that same branch**  
+Once a PR is open, start a new branch (Step 1) for any additional work. Do not continue adding commits to a branch that is under review — it makes the review harder to follow. The reviewer will let you know if any fixes are needed on the existing PR.
 
 **Files I edited are not showing up in Commit-and-sync**  
 Open the Command palette and run **Obsidian Git: Open source control view** to see the current status. Files in red are modified but not yet staged.
