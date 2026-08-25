@@ -2,27 +2,34 @@
 
 **Target runtime:** ~60 minutes  
 **Sources:** docs.astro.build (see `../research/sources.md`)  
-**Recording notes:** Honor `[PAUSE]`, `[RECAP]`, and `[REVIEW: …]`. Do not skip retention beats. Never point at the screen. Aim for a calm conversational pace—about one hundred thirty to one hundred fifty words per minute.
+**Recording notes:** Honor `[PAUSE]`, `[RECAP]`, and `[REVIEW: …]`. Do not skip retention beats. Never point at the screen. Pace: about one hundred thirty to one hundred fifty words per minute.
 
 ---
 
 ## Cold open
 
-Imagine you open a marketing site, a docs site, or a blog. What you needed was the words, the images, maybe a contact form. What you got was a heavy client application: megabytes of JavaScript, a blank moment while frameworks boot, and a machine working hard just to show you paragraphs.
+This episode teaches the foundations of Astro, a JavaScript web framework. It is designed to be understood by listening only. You will not need to see code. When I name a function, I will state its job. When I describe usage, I will describe decisions and step-by-step logic, not syntax.
 
-That tax is not free. It costs phones battery. It costs first paint. It costs search visibility when content arrives late. And for a huge class of websites—the ones whose job is to *deliver content*—that architecture is solving the wrong problem.
+Here is the problem Astro addresses. Many websites exist mainly to deliver content: blogs, documentation, marketing pages, online stores. When these are built with frameworks designed for interactive applications, the browser has to download and run a large amount of JavaScript before the page becomes useful. That slows down first paint, drains batteries on phones, and can hurt search indexing when content arrives late. For a page whose main job is showing text and images, most of that JavaScript is overhead.
 
-You have felt this as a user. You tap a link on a phone over imperfect network. You wait. The URL bar looks busy. Eventually text appears—text that could have been HTML from the first byte. Somewhere along the way, the industry normalized shipping an entire application runtime to display an article.
-
-Astro is a web framework built for that class of sites: content-driven websites that should feel fast by default. This episode is audio-first. You can listen with your eyes closed, on a walk, on a commute, or with the laptop lid almost shut. You will not need to read code on a screen to understand the ideas. When I name a function, I will tell you its job. When I describe usage, I will describe decisions and algorithms—not line-by-line syntax. If a YouTube upload eventually shows diagrams, treat them as optional wallpaper. Your ears are enough.
+Astro's approach: render pages to plain HTML on the server or at build time, ship little or no JavaScript by default, and let you add JavaScript only to the specific components that need it.
 
 [PAUSE]
 
-Here is our map for the next hour. We start with why Astro exists—the job it is hired to do. Then we build a mental model of how a page is born—at build time, at request time, and in the browser. Then Astro components, the HTML-first building blocks. Then islands architecture, the sea-and-island picture that makes selective interactivity make sense. Then the client directives that decide *when* interactive JavaScript loads. Then file-based routing, how folders become URLs. Then content collections at an introductory level—structured content with loaders, schemas, and query helpers. We close by stitching those pieces into one story, and we quiz ourselves out loud with spaced reviews along the way.
+Here is the plan for this episode, in order:
 
-If you already know React or another UI framework, keep listening: Astro’s default is different on purpose. Your muscle memory for hooks and client state still matters—but only inside islands you choose. If you are newer to web frameworks, you are not behind. HTML and the idea of a page are enough to start. Astro was designed so that valid HTML is already a valid starting point for its component language.
+One — why Astro exists and what kinds of sites it fits.  
+Two — a mental model of when a page gets rendered: build time, request time, and browser time.  
+Three — Astro components, the basic building block.  
+Four — islands architecture: client islands and server islands.  
+Five — client directives, which control when interactive JavaScript loads.  
+Six — file-based routing.  
+Seven — content collections, an introduction.  
+Eight — a final synthesis and self-check.
 
-One listening tip: when you hear a review beat, try to answer before I do. That tiny struggle is the spaced-repetition mechanism working.
+Each section ends with a short recap. Throughout the episode there are review beats that re-ask earlier material. When you hear a review question, try to answer it before I do. That retrieval effort is what makes the material stick.
+
+If you already know React or another UI framework, note that Astro's defaults differ deliberately; your existing knowledge applies inside islands, which we will define. If you are newer to web development, knowing HTML and the concept of a URL is enough background for this episode.
 
 [PAUSE]
 
@@ -32,62 +39,56 @@ One listening tip: when you hear a review beat, try to answer before I do. That 
 
 ### Teaching beat
 
-Astro’s job, according to its own design story, is to build content-driven websites: blogs, marketing pages, documentation, portfolios, publishing sites, community sites, e-commerce storefronts—places where the visitor’s success depends on reaching the content quickly.
+Astro is a framework for content-driven websites: blogs, marketing pages, documentation, portfolios, publishing sites, community sites, and e-commerce storefronts. The common trait: the visitor's goal is to reach content, and the site succeeds when that content arrives quickly.
 
-Most modern JavaScript frameworks grew up around *applications*: dashboards, inboxes, social feeds, design tools that feel like native software. Those tools shine when the browser must keep a rich interactive world alive—shared state, optimistic updates, complex client routing. Content sites often do not need that world for every pixel. A documentation page is mostly words and navigation. A marketing page is mostly persuasion and proof. A blog post is mostly narrative. Astro leans into server rendering and ships as little client JavaScript as possible by default, because those pages win when HTML arrives early and stays light.
+Most modern JavaScript frameworks were designed for applications: dashboards, inboxes, social feeds, design tools. In those products, the browser maintains a lot of interactive state, and shipping a client-side application runtime is justified. Content sites usually do not need that runtime for most of the page. A documentation page is mostly text and navigation. A blog post is mostly text. Astro renders these to HTML ahead of time and ships JavaScript only where you explicitly ask for it.
 
 ### Concept breakdown — five design principles
 
-Say these as a checklist you can remember on a walk. Astro’s docs present them as the spine of the product philosophy.
+Astro's documentation lists five design principles. These are worth memorizing because they predict how the framework behaves.
 
-First: **content-driven**. Showcase content. Optimize for readers and buyers of information, not for simulating a desktop app in the browser unless you opt into that complexity. If your homepage’s job is to explain a product, the framework should not force an application architecture onto that explanation.
+First: **content-driven**. The framework is optimized for showing content, not for simulating a desktop application in the browser.
 
-Second: **server-first**. Prefer rendering HTML on the server—or ahead of time at build—over rebuilding the whole UI with client-side JavaScript. If you have touched classic server frameworks, the instinct will feel familiar: the server prepares the document. Here the languages stay web-native: HTML, CSS, and JavaScript or TypeScript. You do not need a second server language to unlock server rendering.
+Second: **server-first**. HTML is rendered on the server or at build time whenever possible, rather than being constructed in the browser by client-side JavaScript. This is the same basic approach as traditional server frameworks like PHP or Rails, but the languages stay HTML, CSS, and JavaScript or TypeScript. You do not need a second server-side language.
 
-Third: **fast by default**. The goal is that it should be hard to accidentally ship a slow site. Performance is not a bonus plugin; it is a design constraint. Less JavaScript by default is a big part of that story, because JavaScript is expensive per byte on real devices.
+Third: **fast by default**. The stated goal is that it should be hard to build a slow site by accident. The main mechanism is shipping less JavaScript, because JavaScript is the most expensive kind of asset per byte: it must be downloaded, parsed, and executed.
 
-Fourth: **easy to use**. Astro’s component language is a superset of HTML. If you can write HTML, you can write a basic Astro component. Familiar patterns from other component systems appear when helpful—expressions in markup, scoped styles by default—without requiring you to learn a separate client reactivity model just to print a heading. Complexity is opt-in.
+Fourth: **easy to use**. The Astro component language is a superset of HTML: any valid HTML is a valid Astro component. Features from other component systems, such as expressions in markup and scoped styles, are added on top. Complexity is opt-in.
 
-Fifth: **developer-focused**. Tooling, docs, integrations, and community are part of the product story—not an afterthought. A framework succeeds when people can learn it, extend it, and get unstuck.
+Fifth: **developer-focused**. Official tooling, editor support, and documentation are part of the framework's scope.
 
 [PAUSE]
 
-### Contrast: SPA gravity vs content gravity
+### Contrast: single-page applications versus Astro's model
 
-It helps to name the gravitational pull you may already feel. Single-page application architectures often assume the browser owns the session: hydrate a big tree, then navigate client-side. That model has real strengths for app-like products. For content sites, the cost shows up as slower time-to-interactive and heavier first loads—exactly when a reader wanted the article.
+A useful contrast to name precisely. A single-page application, or SPA, loads one JavaScript application that renders and re-renders the page in the browser, and handles navigation client-side. This gives smooth in-app transitions and rich state handling, at the cost of a larger initial JavaScript payload and slower time-to-interactive.
 
-Astro’s posture is closer to a multi-page, server-first web: each URL can be a finished document. You can still enhance navigation and add interactive regions. The difference is the default. You start with HTML, then opt into client work where it earns its keep.
+Astro follows a multi-page model: each URL is a separate HTML document, rendered ahead of time or on the server, and navigation uses ordinary links. Interactive regions are added per-component. The important difference is the default: Astro starts from zero client JavaScript and you add it where needed; a SPA starts from a full client runtime and you optimize it down.
 
-### Features as names (not tutorials yet)
+### Feature names to hold for later
 
-When people list Astro’s highlights, they usually mean a cluster of ideas we will unpack today and later:
+Four terms will come up repeatedly. I will only define them fully in later sections; for now, register the names:
 
-- **Islands** — interactive or personalized pieces inside a mostly static page.
-- **UI-agnostic** — you can bring React, Vue, Svelte, Solid, and others for those interactive pieces.
-- **Zero JavaScript by default** — components render to HTML; client JS is not assumed.
-- **Content collections** — structured, validated content with querying helpers.
-
-Hold those names lightly. You do not need to implement them yet. You only need them as vocabulary for the mental models ahead.
+- **Islands** — interactive or personalized components inside an otherwise static page.
+- **UI-agnostic** — you can write island components in React, Vue, Svelte, Solid, Preact, and others, even mixed on one page.
+- **Zero JavaScript by default** — components render to HTML; client JavaScript is only added when requested.
+- **Content collections** — a system for organizing, validating, and querying structured content such as Markdown files.
 
 ### How you use this idea
 
-Use Astro when the primary product is content delivery with selective interactivity. Ask: “If this site shipped as excellent HTML and CSS with a few widgets, would users succeed?” If yes, Astro’s defaults are aligned with you.
-
-Reach for a heavier client-centric stack when the product *is* the interactive application—collaborative canvases, dense dashboards, inbox-like workflows—and even then, understand that Astro can host islands of that interactivity without turning every paragraph into a client component. Mixed architectures are allowed; honesty about the primary job is required.
+When deciding whether Astro fits a project, ask: if this site shipped as well-structured HTML and CSS with a small number of interactive widgets, would users get what they came for? If yes, Astro's defaults match the problem. If the product is itself a complex interactive application—a collaborative editor, a dense dashboard—a client-centric framework may be the better primary tool, though Astro can still host application-like regions as islands.
 
 ### Common mistakes
 
-Mistake one: treating Astro as “React but faster” for every admin dashboard. Sometimes islands are enough. Sometimes a SPA framework is the honest fit. Choose based on the product’s center of gravity, not the blog-post title you last read.
+Mistake one: choosing Astro for a heavily interactive application just because it benchmarks fast on content pages. Match the tool to the dominant workload.
 
-Mistake two: assuming “server-first” means you cannot have interactivity. You can—you opt in, per component, with clear boundaries.
+Mistake two: assuming server-first means no interactivity. Interactivity is available; it is opt-in per component.
 
-Mistake three: equating “static” with “boring” or “outdated.” Static HTML can be the fastest way to deliver yesterday’s article and today’s docs. Freshness and dynamism are available when you need them; they are not mandatory costs on every request.
-
-Mistake four: evaluating Astro only by how similar it feels to your last framework. Evaluate it by how quickly content reaches a visitor on a mid-range phone.
+Mistake three: assuming static HTML means stale content. Sites are rebuilt when content changes, and Astro also supports request-time rendering for pages that genuinely need it.
 
 ### [RECAP — high level]
 
-Astro exists for content-driven sites. It prefers server-rendered HTML, aims to be fast by default, keeps the authoring model close to HTML, and treats client JavaScript as an opt-in expense. Islands, UI framework flexibility, zero JS by default, and content collections are the headline tools—not the whole story, but the right vocabulary for what comes next.
+Astro targets content-driven sites. It renders HTML on the server or at build time, ships zero client JavaScript by default, keeps authoring close to HTML, and lets you add interactive components from any major UI framework where needed. The key vocabulary so far: islands, UI-agnostic, zero JavaScript by default, and content collections.
 
 [PAUSE]
 
@@ -97,59 +98,51 @@ Astro exists for content-driven sites. It prefers server-rendered HTML, aims to 
 
 ### Teaching beat
 
-Before components and folders, lock a timeline in your head. Every page you ship moves through time in up to three stages: **build time**, **request time**, and **browser time**. Confusion in Astro almost always means someone is mixing those stages—expecting build-time data to be per-user, or expecting browser widgets to hold server secrets, or assuming every page must wait on a server round trip.
+Before any specific feature, fix a timeline in your head. A page can be rendered at up to three different times: **build time**, **request time**, and **browser time**. Most confusion in Astro comes from mixing these up—expecting build-time code to know the current user, or expecting browser code to have server secrets.
 
 ### Concept breakdown
 
-**Build time** is when you run your production build. By default, Astro prerenders pages, routes, and endpoints into static HTML ahead of visits. Think of printing a finished document and putting it on a CDN shelf. The work of fetching shared content, rendering templates, and producing HTML happens once per build, then scales out as files.
+**Build time** is when you run the production build, once, before deployment. By default, Astro prerenders every page, route, and endpoint into static HTML at build time. The rendering work happens once; the output is files that can be served from any static host or CDN.
 
-**Request time** is when a visitor asks for a URL and a server runs code *for that visit*. Astro can do this for some or all routes when you add an adapter and opt into on-demand rendering—also called server-side rendering. Useful for personalized pages, freshly changing data, or anything that cannot honestly be prerendered. Adapters are the bridge to a runtime such as Node, Netlify, Vercel, or Cloudflare. Remember the name “adapter” as: “teach Astro’s output how to run on this host’s server model.”
+**Request time** is when a visitor requests a URL and a server runs code for that specific visit. Astro supports this through **on-demand rendering**, also called server-side rendering or SSR. It requires an **adapter**: an integration that packages Astro's server code for a specific runtime, such as Node, Netlify, Vercel, or Cloudflare. Request-time rendering is for pages that cannot be known ahead of time: personalized pages, pages showing frequently changing data.
 
-**Browser time** is what happens after HTML arrives: paint, layout, and any JavaScript that hydrates interactive widgets. This is where client islands spend their budget.
+**Browser time** is everything after the HTML arrives: parsing, painting, and running any JavaScript that makes components interactive.
 
-Astro’s default path emphasizes build time and light browser time. On-demand request time is powerful and intentional, not the silent default for every page. You can keep a mostly static site and mark only certain routes to prerender false. Or, for highly dynamic apps, you can flip the default toward server output and selectively prerender the truly static pages. Today we only need the existence of that dial—not every configuration switch.
+The defaults matter. Astro prerenders everything unless you opt out. To render one route on demand, you add an adapter and set the exported constant `prerender` to false in that route's file. For a mostly-dynamic app, you can instead set the build output option to server, which makes on-demand the default, and then set `prerender` to true on the few static pages. For this episode you only need to know the dial exists and which way it points by default.
 
 [PAUSE]
 
-### Moving parts of the default story
+### The default sequence
 
-Walk this sequence slowly.
+1. You write pages and components.
+2. The build renders them to HTML and assets.
+3. A visitor receives HTML and CSS from static hosting or a CDN.
+4. JavaScript loads only for components you explicitly marked as interactive—possibly none.
+5. If you used on-demand routes or server islands, those specific pieces are rendered at request time; the rest of the site is unaffected.
 
-1. You author pages and components in your project.
-2. The build turns them into HTML and assets.
-3. The visitor receives HTML and CSS quickly from storage or a CDN.
-4. Only marked interactive pieces load JavaScript later—or not at all.
-5. If you introduced server islands or on-demand routes, some HTML may still be produced at request time for those pieces or pages—without forcing the entire product into a client SPA.
+### A classification procedure
 
-### A practical sorting question
+When designing any feature, ask these four questions in order:
 
-When you design a feature, ask aloud:
+Can this HTML be fully determined at build time? If yes, prerender it.
 
-“Can this HTML be known at build time?”  
-If yes, prefer prerender.
+Does it vary per user or per request? If yes, it needs request-time rendering, which means an adapter.
 
-“Must it vary per user or per moment?”  
-If yes, plan for on-demand rendering and an adapter.
+Does it need clicks, input handling, local state, or browser APIs? If yes, it needs client-side JavaScript—a client island.
 
-“Does it need clicks, local state, or browser APIs?”  
-If yes, plan a client island.
-
-“Does it need personalized HTML without browser interactivity?”  
-If yes, plan a server island.
-
-You now have a sorting hat for features. We will flesh out islands next; the timeline is the hat rack.
+Does it need per-request HTML but no browser interactivity? Then it is a candidate for a server island, defined in section D.
 
 ### Common mistakes
 
-Mistake: thinking “static site” means “no server ever.” Hosting still serves files. On-demand adds *your* application server runtime via an adapter.
+Mistake: thinking a static site involves no server. A server still serves the files; the difference is whether your application code runs per request.
 
-Mistake: delaying the whole page for one personalized widget. Astro’s island ideas exist so the shell can stay fast while a piece loads on its own timeline.
+Mistake: making an entire page request-time rendered because one small region is personalized. Islands exist so the static shell can stay prerendered and cached while one region renders per request.
 
-Mistake: fetching user-specific data at build time and wondering why every visitor sees the same person. Build time has no “current user” unless you bake one in—which you almost never want for personalization.
+Mistake: fetching user-specific data at build time. Build time runs once, before any user exists in the picture; there is no current user at build time.
 
 ### [RECAP — high level]
 
-Remember three times: build, request, browser. Default Astro leans on prerendered HTML. Request-time rendering is opt-in with an adapter. Browser JavaScript is for the pieces that truly need it. Sort features by which time they honestly belong to.
+Three rendering times: build, request, browser. The default is build-time prerendering to static HTML. Request-time rendering is opt-in and requires an adapter. Browser JavaScript is reserved for components that need interactivity. Classify every feature by which time it belongs to.
 
 [PAUSE]
 
@@ -159,65 +152,63 @@ Remember three times: build, request, browser. Default Astro leans on prerendere
 
 ### Teaching beat
 
-Astro components are the basic building blocks of an Astro project. They use the `.astro` file extension. The most important fact—the one to tattoo on the inside of your eyelids—is this: they do not render on the client as a framework runtime. They render to HTML at build time or on demand. Any JavaScript you write in the component’s server-side script is kept on the server side of that render. It is not an Astro client runtime living in the browser. The result is a faster page with zero JavaScript footprint added by default from the Astro component model itself.
+Astro components use the `.astro` file extension and are the basic building block of an Astro project. The single most important fact about them: they have no client-side runtime. They render to HTML at build time or at request time, and the JavaScript you write inside them runs during that render, on the server side. None of it is sent to the browser.
 
-When you later need client interactivity, you do not “turn on Astro client mode for the whole file.” You add standard HTML behaviors, or you add UI framework components as client islands, or you defer personalized server HTML as server islands. The component stays HTML-first.
+When you need client interactivity, you do not add it by changing the Astro component's mode. You either use plain HTML and standard script tags, or you embed a UI framework component as a client island, or you defer a region's server rendering as a server island. The Astro component itself stays a server-rendered template.
 
 ### Concept breakdown — two parts
 
-An Astro component has two main parts. Memorize them as **prepare** and **present**.
+An Astro component has two parts: the **component script** and the **component template**.
 
-**One: the component script — prepare.**  
-It lives inside a code fence—three dashes on a line, like Markdown frontmatter. Inside that fence you import other components, import data, fetch from APIs or databases, and prepare variables. You can read props from a global called **Astro.props**.
+**The component script.** It sits at the top of the file inside a code fence: a line of three dashes, the script, then another line of three dashes—the same convention as Markdown frontmatter. In the script you can import other components, import data files, fetch from APIs or databases, and compute variables for the template. This code runs only during rendering. Because it never reaches the browser, it can safely use secrets: private API keys, direct database access.
+
+The script can read the component's inputs through a global called **Astro.props**.
 
 Spoken API card — **Astro.props**:  
-Purpose: access the inputs someone passed into your component, the way attributes pass data in HTML.  
-You give: attribute-like props when using the component.  
-You get: an object of those values in the script, often destructured into local names.  
-Scenario: a greeting component receives a name and a greeting string, then the template prints them. Defaults can be applied when a prop is missing.
+Purpose: read the values passed into the component by whoever used it.  
+You give: attributes on the component when you use it, the same syntax as HTML attributes.  
+You get: an object with those values, usually destructured into named variables in the script. Defaults can be supplied for missing props.  
+Scenario: a heading component receives a title prop; the script reads it from Astro.props; the template prints it inside a heading tag.
 
-Because that script is fenced for the server side of rendering, you can do expensive or sensitive work there—private API keys, database reads—without shipping that logic to the browser as part of an Astro client runtime.
-
-**Two: the component template — present.**  
-Everything below the fence is the HTML you output. You can interleave expressions, compose other components, and use Astro’s template directives. Data prepared in the script becomes available in the template. If you write plain HTML, you get plain HTML. If you map a list into list items, you are describing an algorithm in the template: for each item, emit a list entry.
+**The component template.** Everything below the fence. It is HTML, plus three additions: curly-brace expressions that interpolate values computed in the script, imported components used as tags, and Astro's template directives. If the template maps an array into elements, describe it as logic: for each item in the list, output one list-item element containing the item's name.
 
 [PAUSE]
 
-### Moving parts — composition
+### Composition: props and slots
 
-**Props** customize a component from the outside. Think of them as the knobs on a reusable block.
+**Props** pass data from a parent component into a child, downward, at render time.
 
-**Slots** let a parent inject children into a placeholder inside a child component. A default slot catches ordinary children. Named slots catch children marked for a specific slot name—like “put this image after the header, put this copyright after the footer.” Slots can include fallback content when nothing was passed, so a wrapper still looks complete.
+**Slots** pass markup from a parent into a placeholder inside a child. A slot element in the child's template marks where the parent's children will be inserted. There are three variants to know:
 
-Layouts in Astro are usually just components that wrap page content with shared chrome—document shell, header, footer—using slots. Mentally say: “page body drops into the layout’s slot.” Nested layouts can transfer slots upward so a page can still contribute to the document head while living inside a home layout that lives inside a base layout. You do not need the full nesting graph today; you need the idea that layouts are components plus slots, not a separate magical system.
+- The **default slot** receives all children that are not otherwise labeled.
+- **Named slots** receive only children labeled with a matching slot name. A child template can define several named slots—for example one after the header and one after the footer—and the parent labels each piece of content for its target slot.
+- **Fallback content**: a slot can contain default markup that renders only when the parent passed nothing for it.
 
-You can nest components freely. A button group can contain buttons. A card can contain a title component and a slot for body text. Composition is how small HTML-first pieces become pages.
+**Layouts** are an application of slots, not a separate system. A layout is an Astro component containing the shared page structure—the HTML document shell, header, footer—with a slot where each page's content is inserted. A page imports the layout, wraps its content in the layout's tag, and the content lands in the slot.
 
 ### How you use this idea
 
-Author shared UI as `.astro` components when you need HTML structure without client interactivity. Keep data preparation and secret fetches in the fence. Keep markup in the template. Pass props down. Use slots when the parent owns the inner content but the child owns the wrapper. Reach for TypeScript prop interfaces when you want editor help—Astro can pick up a Props interface in the fence—but the mental model does not depend on TypeScript.
+Write shared UI as Astro components whenever it does not need client-side interactivity. Put data loading and computation in the script; put markup in the template. Pass data down with props. Use slots when the child owns the wrapper and the parent owns the inner content. TypeScript users can declare a Props interface in the script for editor checking, but the model works the same without it.
 
 ### Common mistakes
 
-Mistake: assuming the fence is “client JavaScript.” It is not a browser bundle for an Astro runtime.
+Mistake: treating the component script as browser JavaScript. It runs at render time on the server side; browser features like the window object are not available there.
 
-Mistake: putting interactivity in an Astro component and expecting hooks and client state. For true client interactivity, bring a UI framework component and hydrate it as an island—or use plain HTML—rather than treating `.astro` like a React function component with hooks. There is no reactivity system on the server render of an Astro component in the React-hooks sense; that complexity melts away on purpose.
+Mistake: expecting React-style hooks or reactive state inside an Astro component. There is no client runtime, so there is no client state. Interactivity comes from islands or plain script tags.
 
-Mistake: forgetting slots when building layouts, and instead copy-pasting headers into every page.
-
-Mistake: fearing that “HTML-first” means “not powerful.” Fetching, mapping, composing, and templating are powerful. They are just aimed at documents first.
+Mistake: duplicating headers and footers across pages instead of writing a layout with a slot.
 
 ### [RECAP — high level]
 
-Astro components are HTML-first building blocks with a server-side script fence and a template. Props configure them. Slots compose them. They render to HTML without an Astro client runtime by default. Prepare in the fence; present in the template.
+An Astro component is a server-rendered template in two parts: a script fence for imports, data fetching, and props; and a template for HTML output. Props pass data down; slots pass markup in; layouts are components with slots. No component JavaScript is sent to the browser.
 
 [PAUSE]
 
 ### [REVIEW: server-first / zero JS]
 
-Remember earlier: Astro is server-first and ships zero JavaScript by default for these components. If you only used Astro components and plain HTML on a page, what would a visitor download for your UI runtime—an Astro framework bundle that re-renders the page in the browser, or mostly HTML and CSS?  
+From section A: Astro is server-first with zero JavaScript by default. Apply it: if a page is built entirely from Astro components and plain HTML, what JavaScript does the visitor download for those components?  
 [PAUSE]  
-Mostly HTML and CSS. The interactive tax appears when you opt into client islands. Hold that; islands are next, and they exist precisely so you can pay that tax locally instead of globally.
+None. The components rendered to HTML during the build; only the HTML and CSS ship. Client JavaScript enters only when you add islands, which is the next section.
 
 ---
 
@@ -225,65 +216,62 @@ Mostly HTML and CSS. The interactive tax appears when you opt into client island
 
 ### Teaching beat
 
-Islands architecture is the pattern Astro helped popularize for content sites: render most of the page to fast static HTML, then place smaller “islands” where interactivity or personalization is needed—an image carousel, a search widget, a logged-in avatar.
+Islands architecture is a rendering pattern: deliver the majority of the page as static HTML, and embed a small number of independent, self-contained interactive or dynamic regions—the islands. Astro's documentation describes it as interactive widgets in a sea of static, server-rendered HTML. The pattern was named by frontend architect Katie Sylor-Miller and elaborated by Jason Miller of Preact; Astro was the first mainstream framework with this selective approach built in.
 
-Think of a calm sea of HTML. Most of it needs no JavaScript. Here and there, an island rises: a bounded region with its own loading story. The term “component island” has history—frontend architect Katie Sylor-Miller coined early language around it, and Preact’s Jason Miller wrote about the pattern of server HTML with selective hydration of widgets. Astro became a mainstream framework with selective hydration built in, and later expanded the idea toward deferred server-rendered regions as well.
+The performance logic: instead of one JavaScript bundle that hydrates the entire page, each island loads and initializes independently, and non-island regions load no component JavaScript at all.
 
 ### Concept breakdown — two kinds of islands
 
-**Client island.** An interactive JavaScript UI component that hydrates separately from the rest of the page. Hydration means: the build or server already sent HTML for that widget; then browser JavaScript attaches to make it interactive. Astro’s twist is *selective* hydration—only the islands you mark, not the entire document as one SPA. Outside the island, there is no component JavaScript to download for that static sea.
+Astro has two island types, and the distinction is central.
 
-**Server island.** A UI component whose dynamic server HTML is rendered separately from the main page render. You mark it with **server colon defer**—spoken nickname: the **server-defer** directive. The page shell can appear with fallback content while that island’s HTML arrives on its own. Personalized bits—avatar, cart count, recommendations—do not have to block the whole document. The outer shell can stay cacheable. Server islands need an adapter installed so deferred rendering can run in a server runtime. Implementation-wise, think: the island is split to its own special route; a small script fetches that HTML later and swaps it into place. You do not need the network diagram memorized—only the product effect: shell first, personalized HTML next, independently.
+**Client island.** An interactive UI framework component—React, Svelte, Vue, and so on—that is **hydrated** in the browser. Hydration means: the component's HTML was already rendered on the server and is present in the page; the browser then downloads the component's JavaScript and attaches it to that existing HTML to make it interactive. You create a client island by adding a client directive to the component; without a directive, the component renders to static HTML only. Client islands are for interactivity: input, clicks, state.
+
+**Server island.** An Astro component whose server rendering is **deferred**: the page ships without it, showing fallback content in its place, and the island's HTML is fetched and inserted after the page loads. You create one with the **server:defer** directive—after this first mention, I will call it server-defer. Server islands are for per-request HTML without interactivity: a logged-in user's avatar, a cart count, personalized recommendations. The main page can remain prerendered and cached, because the personalized part is fetched separately.
+
+Server islands require an adapter, because rendering the deferred HTML is server work at request time.
+
+Mechanically, at build time Astro replaces a server-deferred component with its fallback content plus a small script; at load time that script fetches the island's rendered HTML from a dedicated endpoint and swaps it in. You do not need to memorize the mechanism; remember the effect: static shell first, deferred HTML after, each island independent.
 
 [PAUSE]
 
-### Moving parts
+### Properties worth remembering
 
-- The **static sea**: Astro components and non-hydrated framework output as HTML and CSS.
-- The **client island boundary**: a UI framework component plus a `client:*` directive.
-- The **server island boundary**: an Astro component plus `server:defer`, often with a fallback slot so layout does not jump.
-- **Independence**: islands load and work without waiting on each other. A heavy carousel should not block a light header widget.
-- **UI-agnostic islands**: because islands are isolated, different framework islands can coexist on one page. That sounds chaotic until you remember they do not share one mandatory client tree.
+- Islands are isolated. Each one loads without waiting for the others. A slow island does not block a fast one.
+- Isolation is why Astro supports multiple UI frameworks on one page: each island is its own component tree.
+- Client islands can still communicate with each other in the browser—through events or shared stores—but they do not share one framework runtime tree.
+- Fallback content for a server island is provided through a slot named fallback, and it should approximate the final size of the island to avoid layout shift when the real content arrives.
 
 Spoken API card — **server:defer**:  
-Purpose: turn a component into a server island so its server HTML is deferred from the main render.  
-You give: the directive on a component; optionally fallback children in the fallback slot.  
-You get: a fast shell with placeholder content, then the real HTML when ready.  
-Scenario: product page shell is cacheable; the personalized cart button fills in afterward while the product description was already visible.
+Purpose: convert an Astro component into a server island whose rendering is deferred out of the main page render.  
+You give: the directive on the component, and optionally fallback children assigned to the fallback slot.  
+You get: a page that renders immediately with the fallback, then replaces it with the island's server-rendered HTML.  
+Scenario: an e-commerce page prerenders the product content; the cart button, which depends on the visitor's session, is server-deferred with a generic button as fallback.
 
 ### How you use this idea
 
-Sketch the page as mostly content. Literally imagine circling regions on a wireframe.
-
-Circle only the widgets that need browser interactivity—those are client island candidates.  
-Circle only the regions that need per-request personalized HTML without client framework logic—those are server island candidates.  
-Leave everything else as plain Astro HTML.
-
-Ask whether two interactive widgets must share state. Sometimes they talk through lightweight browser patterns; often they do not need to. Isolation is a feature.
+Design pages by classification. Go region by region and ask: does this region need browser interactivity? If yes, it is a client island candidate. Does it need per-request HTML but no interactivity? Server island candidate. Neither? It stays static HTML. On a typical content page, most regions fall into the last category.
 
 ### Common mistakes
 
-Mistake: hydrating the whole page “just in case.” That recreates the SPA cost Astro tries to avoid.
+Mistake: hydrating everything. Marking every component as a client island reproduces the single-page-application cost that the architecture is designed to avoid.
 
-Mistake: using a client island when you only needed personalized HTML. Client islands ship framework JavaScript; server islands ship deferred HTML.
+Mistake: using a client island where a server island suffices. If the region only needs personalized HTML—no clicks, no state—a server island delivers it without shipping any framework JavaScript.
 
-Mistake: forgetting that server islands require an adapter.
+Mistake: forgetting that server islands need an adapter installed.
 
-Mistake: omitting fallback content and accepting layout shift when deferred HTML arrives. Size your fallback to resemble the final island.
-
-Mistake: treating islands as miniature SPAs that must own the whole page’s data model. Keep them bounded.
+Mistake: omitting fallback content, causing visible layout shift when the deferred HTML arrives.
 
 ### [RECAP — high level]
 
-Islands mean a sea of static HTML with bounded enhancements. Client islands hydrate interactive UI in the browser. Server islands defer dynamic server HTML. Each island can load on its own timeline. Draw the sea first; raise islands only where earned.
+Islands are independent dynamic regions in a static HTML page. Client islands are framework components hydrated in the browser, for interactivity. Server islands are components whose server rendering is deferred, for per-request HTML. Each island loads independently, and everything outside the islands ships no component JavaScript.
 
 [PAUSE]
 
 ### [REVIEW: fence vs template]
 
-Remember the Astro component fence versus template. Suppose a server island must call a private API with a secret key to render an avatar. Where does that fetch belong—inside the component script fence, or in browser-side island JavaScript?  
+From section C: an Astro component has a script fence and a template. Apply it: a server island needs to call a private API with a secret key to render a user's avatar. Where does that call go—in the component's script fence, or in JavaScript running in the browser?  
 [PAUSE]  
-In the server-side component script. The fence is where sensitive and expensive server work lives. Browser island JavaScript is for interaction after HTML exists—not for holding your private keys. If you feel tempted to put a secret in a client island, that temptation is a design smell pointing you back to the server.
+In the script fence. The fence runs during server rendering and never reaches the browser, so the secret stays on the server. Browser JavaScript—client island code—must never contain secrets, because everything sent to the browser is readable by the user.
 
 ---
 
@@ -291,67 +279,63 @@ In the server-side component script. The fence is where sensitive and expensive 
 
 ### Teaching beat
 
-By default, a UI framework component in an Astro page renders to HTML and CSS with **no** client hydration. That default is the performance guardrail. To make the component interactive, you add a **client directive**—a special template attribute with a colon in its name, of the form name-colon-value style instructions such as client-load.
+By default, when you place a UI framework component in an Astro template, Astro renders it to HTML and strips its JavaScript. The component appears on the page but is not interactive. To hydrate it, you add a **client directive**: an attribute on the component, written as the word client, a colon, and a strategy name. The directive does two things: it marks the component for hydration, and it specifies **when** the JavaScript should load.
 
-Directives are instructions to Astro’s compiler about behavior. They control how and when hydration happens. They are not a substitute for thinking; they are a precise vocabulary for loading priority.
+That timing control is the point. Not all interactive components are equally urgent, and the directives let you match loading cost to actual need.
 
-### Spoken API cards — when JavaScript loads
+### Spoken API cards — the five directives
 
-Walk these as a priority ladder from urgent to specialized.
+**client:load** — hereafter client-load. Highest priority. Loads and hydrates the component's JavaScript immediately when the page loads. Use it for interactive elements that are visible immediately and must respond right away—a buy button, a critical form.
 
-**client:load** — High priority. Load and hydrate immediately on page load. Use for above-the-fold UI that must be interactive ASAP—buy buttons, primary controls that define the page’s job.
+**client:idle** — client-idle. Medium priority. Hydrates once the browser finishes its initial work and reports idle, using the request-idle-callback mechanism where available. Use it for components that should become interactive soon but should not compete with the page's initial rendering. It optionally accepts a timeout in milliseconds—a maximum wait before hydration proceeds regardless.
 
-**client:idle** — Medium priority. Hydrate when the browser is idle after initial work—using idle callback behavior, with a document load fallback where needed. Use for less urgent widgets that should become interactive soon without competing with first paint work. You can also think in terms of a timeout budget when you need a maximum wait before hydration proceeds.
+**client:visible** — client-visible. Low priority. Hydrates only when the component scrolls into the viewport, implemented with an intersection observer. Use it for anything below the fold, especially heavy components. If the user never scrolls there, the JavaScript never loads. It optionally accepts a root-margin value, which starts hydration when the component is within a given distance of the viewport, so it is ready by the time the user reaches it.
 
-**client:visible** — Lower priority. Hydrate when the component enters the viewport, via intersection observing. Use for below-the-fold carousels or heavy widgets the user might never scroll to. If they never see it, they may never pay for it. You can also bias hydration earlier with a margin around the viewport so the island is ready as the user approaches.
+**client:media** — client-media. Takes a CSS media query string and hydrates only when the query matches. Use it for components that only function at certain screen sizes—for example, a sidebar toggle that exists only in the mobile layout.
 
-**client:media** — Hydrate when a CSS media query matches. Use for UI that only matters at certain breakpoints—like a mobile sidebar toggle that desktop never needs.
-
-**client:only** — Skip server HTML for that component; render only on the client, loading immediately along a high-priority path. You **must** pass the framework name as the value—React, Preact, Svelte, Vue, Solid, and so on—because Astro did not render it on the server and cannot infer the framework. You can show fallback slot content while it loads. Use this when server rendering that component is impossible or undesirable—not as a lazy shortcut for everything.
+**client:only** — client-only. Skips server rendering entirely: no HTML is produced at build or request time, and the component renders in the browser from scratch, loading immediately. It **requires** the framework name as its value—for example client-only equals react—because Astro never renders the component itself and cannot detect the framework. You can supply fallback content through the fallback slot to fill the space while it loads. Use client-only when the component cannot render on the server at all—for example, it depends on browser-only APIs at render time.
 
 [PAUSE]
 
-### How you use this idea — a spoken decision tree
+### How you use this idea — a decision procedure
 
-Ask these questions in order.
+Given a framework component on a page, decide as follows.
 
-Does this UI need browser interactivity at all? If no, skip client directives. Enjoy HTML.
+Does it need interactivity? No: use no directive. It becomes static HTML.
 
-If yes: Must it be interactive the instant the page appears? If yes, client-load.
+Interactive and immediately visible and urgent: client-load.
 
-If it can wait until the main thread breathes: client-idle.
+Interactive but can wait for the browser to settle: client-idle.
 
-If it is offscreen or expensive: client-visible.
+Below the fold or expensive: client-visible.
 
-If it only exists for certain screen sizes: client-media.
+Only relevant at certain screen widths: client-media with the query.
 
-If it cannot or should not server-render: client-only with an explicit framework name—and provide fallback content when you can.
+Cannot render on the server: client-only, with the framework name, ideally with fallback content.
 
-Notice what this tree does *not* ask: “What framework am I most comfortable with?” Framework choice matters for authoring the island; loading priority matters for the visitor. Separate those decisions.
+One more rule: prefer several small islands with appropriate priorities over one large island with client-load. Smaller islands mean less JavaScript per boundary and finer control over loading.
 
 ### Common mistakes
 
-Mistake: putting client-load on everything “to be safe.” You just reinvented a heavy page with extra steps.
+Mistake: applying client-load to everything. This loads all component JavaScript up front and forfeits the architecture's main benefit.
 
-Mistake: using client-only for convenience when server-rendered HTML would improve first paint and make meaningful content visible earlier.
+Mistake: using client-only out of convenience. It removes the server-rendered HTML, so the content is invisible until JavaScript runs—worse for first paint and for anything that reads the initial HTML.
 
-Mistake: forgetting the framework name on client-only.
+Mistake: omitting the framework name on client-only. It is required, not optional.
 
-Mistake: hydrating a giant island that should have been three smaller islands with different priorities.
-
-Mistake: confusing “visible” with “important.” A checkout button can be important and still be above the fold with client-load; a footer animation can be unimportant and visible-triggered—or omitted.
+Mistake: confusing visibility with importance. An important above-the-fold control gets client-load; an unimportant decorative widget below the fold gets client-visible or nothing.
 
 ### [RECAP — high level]
 
-No client directive means HTML only for that framework component. Directives choose *when* hydration JavaScript runs: immediate, idle, visible, media-driven, or client-only. Match urgency to cost. Default is none.
+A framework component without a directive renders to static HTML. Client directives opt it into hydration and set the timing: load means immediately, idle means when the browser settles, visible means when scrolled into view, media means when a media query matches, and only means skip server rendering and render purely in the browser, with the framework named explicitly.
 
 [PAUSE]
 
 ### [REVIEW: client vs server island decision]
 
-Picture a product page. The product title and description are the same for everyone. The header shows the shopper’s avatar. The reviews carousel can swipe. Which is a server island candidate, which is a client island candidate, and what stays in the static sea?  
+From section D. A product page: the title and description are identical for every visitor; the header shows the current shopper's avatar; a reviews carousel supports swiping. Classify all three.  
 [PAUSE]  
-Title and description: static sea. Avatar personalized HTML: server island with server-defer. Swipeable carousel: client island with an appropriate client directive—often visible if it sits lower on the page. Same page, three timelines, one coherent document.
+Title and description: static HTML, no island. Avatar: personalized HTML without interactivity, so a server island with server-defer. Carousel: interactive, so a client island—and since carousels usually sit lower on the page, client-visible is the typical directive.
 
 ---
 
@@ -359,54 +343,52 @@ Title and description: static sea. Avatar personalized HTML: server island with 
 
 ### Teaching beat
 
-Astro uses **file-based routing**. The special pages folder under your source directory maps files to URL paths. There is no separate central route table required for ordinary pages. What you see in the folder tree is largely what you get on the site map. Navigation between pages uses standard HTML links—there is no mandatory framework-specific Link component for basic routing. That detail matters philosophically: multi-page documents linked by anchors are first-class, not a legacy mode.
+Astro uses **file-based routing**: the files inside the pages directory, under source, define the site's URLs. There is no separate route configuration file for ordinary pages. Navigation between pages uses standard HTML anchor tags; Astro does not require a framework-specific link component.
 
 ### Concept breakdown
 
-**Static routes:** A file named about under pages becomes the about URL. An index file maps to the folder’s root URL. Nested folders nest URL segments. Markdown and MDX placed in pages can become pages too. The algorithm is almost embarrassingly simple: path plus filename equals route.
+**Static routes.** A page file's path and name map directly to a URL. A file named about, in pages, serves the URL slash about. A file named index serves its folder's root URL. Folders nest URL segments: a file at pages, folder about, file me, serves slash about slash me. Astro components, Markdown, and MDX files in pages all become pages.
 
-**Dynamic routes:** Put parameters in brackets in the filename. A file under authors with brackets around author creates a pattern where author is a parameter you can read from **Astro.params**. Multiple brackets mean multiple params. Rest parameters—brackets with three dots—match nested path segments when you need flexible depth, like a file viewer path with many folders.
+**Dynamic routes.** A filename can contain a parameter in square brackets. A file in pages, folder authors, named bracket author bracket, matches URLs of the form slash authors slash some-name, and the matched value is available in the page as a parameter. The page reads it from **Astro.params**—an object whose keys are the bracket names from the file path.
 
-In Astro’s **default static output**, those dynamic pages must be known at build time. You export a function named **getStaticPaths**.
+A filename can contain several parameters, and a **rest parameter**—three dots before the name, inside brackets—matches any number of path segments, for arbitrarily deep paths.
+
+Now the part that ties into the rendering timeline from section B. In the default static output, every page is built ahead of time, so Astro must know the complete list of URLs a dynamic route will produce. You provide that list by exporting a function named **getStaticPaths** from the dynamic route file.
 
 Spoken API card — **getStaticPaths**:  
-Purpose: tell Astro which concrete URLs to prerender from a dynamic route file.  
-You give: a function that returns an array of objects. Each object includes a params object whose keys match the bracket names in the file. Optionally include props to pass data into that page so the template does not refetch what you already know.  
-You get: one prerendered page per returned item.  
-Algorithm in words: gather the set of identities you need—dog names, post ids, locale pairs—map each identity into a params object, return the array, let the build materialize HTML for each.  
-Scenario: return three dog names as params; Astro builds three dog pages at build time.
+Purpose: enumerate the concrete URLs a dynamic route should prerender.  
+You give: a function returning an array of objects. Each object has a params property whose keys match the bracket names in the filename. Each object may also carry a props property with data for that page, so the page does not have to refetch what you already loaded while listing the paths.  
+You get: one prerendered HTML page per array item.  
+The logic in words: collect the identities you want pages for; for each identity, produce an object with params, and optionally props; return the array; the build produces one page per entry.  
+Scenario: a dynamic route for dog profiles returns three params objects with the dog names clifford, rover, and spot; the build produces three pages, and each page reads its dog name from Astro.params.
 
-On-demand dynamic routes—with an adapter—still use bracket filenames, but they are not prerendered lists. Matching URLs are handled at request time, and **getStaticPaths is not used** there. You read params from the request and decide what to render, including redirects when an identity is missing. We only need that contrast today; deeper SSR patterns belong in a later episode. For now: static dynamic routes are enumerated; on-demand dynamic routes are matched.
+**On-demand dynamic routes** work differently. With an adapter and prerendering disabled for the route, the same bracket-filename patterns are matched at request time, for any value. There is no enumeration step and getStaticPaths is not used. The page reads Astro.params per request and decides what to render—including returning a redirect or a not-found response when the value is invalid. For this episode, keep the contrast: static dynamic routes are enumerated at build; on-demand dynamic routes are matched at request.
 
 [PAUSE]
 
 ### How you use this idea
 
-Place one file per static page under pages. For families of pages—blog posts, products, docs—use a dynamic route file, and in static mode teach getStaticPaths to enumerate params. Read params from Astro.params. Pass heavy data via props from getStaticPaths when you already loaded it while building paths. Link with ordinary anchors. When a URL permanently moves, Astro also supports configured redirects and dynamic redirects—but treat those as edge tools; the center is still files-to-URLs.
+One file per fixed page. For a family of similar pages—posts, products, author profiles—one dynamic route file. In static mode, implement getStaticPaths to enumerate the family; read the parameter with Astro.params; pass per-page data through props when you already have it. Link between pages with plain anchor tags. Astro also supports configured redirects and rewrites for URL changes, but the core model is files map to URLs.
 
 ### Common mistakes
 
-Mistake: expecting a dynamic static route to magically invent URLs without getStaticPaths.
+Mistake: creating a dynamic route in static mode without getStaticPaths. The build cannot know which URLs to produce; the enumeration is required.
 
-Mistake: using getStaticPaths on an on-demand route and wondering why the model feels wrong.
+Mistake: using getStaticPaths on an on-demand route. It belongs to build-time enumeration only.
 
-Mistake: putting content collection files in pages and assuming that alone creates a collection API—collections are a different system, next section.
-
-Mistake: over-nesting rest parameters in on-demand mode beyond what the routing rules allow. When you go on-demand later, re-read the constraints; today, prefer clear single params for your mental model.
-
-Mistake: inventing a client-side router for a content site that only needed anchors and prerendered pages.
+Mistake: expecting files outside pages to become URLs. Only the pages directory defines routes; content elsewhere needs a route to publish it—which is exactly the relationship covered next, in content collections.
 
 ### [RECAP — high level]
 
-Files in the pages folder become routes. Brackets create parameters. In static mode, getStaticPaths lists the param combinations to prerender. On-demand mode matches at request time without that build-time list. Links are just links. Your site map starts as a folder map.
+Files in pages map to URLs. Bracketed filenames declare parameters, read via Astro.params. In static output, getStaticPaths enumerates every URL a dynamic route produces, optionally passing props. In on-demand output, routes match at request time without enumeration. Navigation is plain links.
 
 [PAUSE]
 
 ### [REVIEW: islands on a mostly-static page]
 
-You prerender a blog post page as HTML. Midway through the article you want a reactive quiz widget built in a UI framework. Does the whole article need to become a client application, or can the article stay in the static sea with one client island?  
+From sections D and E. A blog post is prerendered to HTML. You want an interactive quiz widget in the middle of the article, built with a UI framework. Does the article become a client-rendered application, or is there a narrower change?  
 [PAUSE]  
-Keep the article as static HTML. Mark only the quiz as a client island with a directive that matches how soon it must be interactive—often idle or visible. The route is still a document. The island is a widget floating in that document.
+Narrower. The article stays prerendered static HTML. Only the quiz component gets a client directive, making it a client island—client-visible is a reasonable choice, since it hydrates only when the reader scrolls to it.
 
 ---
 
@@ -414,125 +396,121 @@ Keep the article as static HTML. Mark only the quiz as a client island with a di
 
 ### Teaching beat
 
-**Content collections** are Astro’s recommended way to manage sets of related structured content: blog posts, authors, recipes, product copy—anything that shares a shape. Collections help you organize entries, validate them, get editor autocompletion and TypeScript safety, and query them with content-focused APIs instead of ad-hoc file imports scattered across the project.
+**Content collections** are Astro's system for managing sets of structurally similar content: blog posts, product entries, author profiles, documentation pages. A collection gives you three things over loose files: organization with a defined shape, validation of every entry against a schema at build time, and typed query functions instead of manual file imports.
 
-Collections pull from local files or remote sources through **loaders**. That loader-centered design is the Content Layer idea: content can live in Markdown folders, JSON files, a CMS, or custom sources, while your pages query through a consistent API. Authors get structure; engineers get a single querying vocabulary.
+The design is loader-based. A **loader** is the part that retrieves entries—from a folder of Markdown files, from a single JSON file, or from a remote source like a CMS through a custom or community loader. Whatever the source, pages query the collection through the same API. This loader-based design is called the Content Layer.
 
 ### Concept breakdown — moving parts
 
-A **collection** is the set. An **entry** is one member.
+Vocabulary first: a **collection** is the set; an **entry** is one member of it.
 
-Two broad timings exist. **Build-time collections** load during the build into a stored content layer—great for blogs, docs, and relatively stable product copy. **Live collections** fetch at request time for frequently changing data—inventory, rapidly edited CMS previews, per-request freshness—with tradeoffs such as no MDX at runtime and no build-time image pipeline in the same way. Both can coexist. Prefer build-time when you can; choose live when freshness is the product requirement.
+There are two timing variants, matching the timeline from section B. **Build-time collections** are loaded during the build and stored; this is the default recommendation and fits content that changes at content-editing pace—posts, docs, product copy. **Live collections** fetch at request time, for data that must be current at the moment of the request—inventory levels, draft previews. Live collections have costs: fetching happens per request, and some build-time features like MDX rendering and image optimization are unavailable at runtime. Both variants can coexist in one project. The guidance from the docs: use build-time collections whenever possible.
 
-You define build-time collections in a special content config file under source—commonly named content.config with a TypeScript or JavaScript extension. For each collection you call **defineCollection** with:
+Build-time collections are defined in one configuration file at the source root, named content dot config. For each collection you call **defineCollection**, providing:
 
-- a required **loader** — how to retrieve entries (built-ins include **glob** for folders of files and **file** for a single data file; custom and community loaders exist for remotes);
-- an optional but highly recommended **schema** — the expected shape of each entry’s data, for validation and types.
+- a **loader**, required — the built-in glob loader reads a folder of files matching a pattern; the built-in file loader reads entries out of a single data file;
+- a **schema**, optional but strongly recommended — a declaration of the fields every entry must have, used for validation and for generated TypeScript types.
 
-Then you export a collections object registering them by name.
+The file then exports a collections object registering each collection by name.
 
 Spoken API card — **defineCollection**:  
-Purpose: declare one collection’s loader and schema.  
-You give: loader configuration and optional schema describing fields like title, description, dates.  
-You get: a collection definition to register in the exported collections object.  
-Scenario: a blog collection that globs Markdown files under a content folder and requires title, description, and publish date so a missing title fails at build instead of in production silence.
+Purpose: declare one collection: where its entries come from and what shape they must have.  
+You give: a loader configuration and, ideally, a schema listing fields—for example title as a string, description as a string, publish date as a date.  
+You get: a collection definition, registered under a name in the exported collections object.  
+Scenario: a blog collection whose loader globs Markdown files from a content folder, with a schema requiring title, description, and publish date. An author forgetting a title breaks the build with a clear error, instead of shipping a broken page.
 
 Spoken API card — **getCollection**:  
-Purpose: query entries from a named collection—often all of them, sometimes filtered.  
-You give: the collection name and optional filter logic.  
-You get: an array of entries you can loop for indexes, feeds, or path generation.  
-Scenario: load all blog entries to build a post list page sorted by date.
+Purpose: query a collection's entries.  
+You give: the collection name, and optionally a filter function.  
+You get: an array of entries. Each entry carries an id and a data object holding the schema fields.  
+Scenario: a blog index page calls getCollection with the name blog, sorts the entries by publish date, and renders a list of links.
 
 Spoken API card — **getEntry**:  
-Purpose: fetch one entry by collection and identity.  
-You give: collection name and entry id.  
-You get: that entry for a detail page.  
-Scenario: a dynamic post page reads an id from URL params, then getEntry loads the article.
+Purpose: fetch a single entry.  
+You give: the collection name and the entry's id.  
+You get: that one entry.  
+Scenario: a post page reads an id from its URL parameter and calls getEntry to load exactly that post.
 
 [PAUSE]
 
-### Critical relationship: collections are not routes
+### The critical relationship: collections do not create routes
 
-Collection entries do **not** automatically become pages. Content usually lives outside the pages folder’s automatic routing. That is deliberate: content structure and URL structure are related but not identical. To publish HTML for each entry, you create a dynamic route and map request params to entries—commonly by calling getCollection inside getStaticPaths for a static site, returning params—often the entry id—and often the entry as props for each post.
+Collection entries do not automatically become pages. Collection content lives outside the pages directory, so file-based routing does not see it. To publish entries as pages, you combine the two systems from this episode:
 
-Say the algorithm once more, slowly: define collection; load entries with getCollection; map each entry to a params object in getStaticPaths; prerender; in the page template, read props or fetch the entry; render.
+Create a dynamic route in pages. In static mode, inside its getStaticPaths, call getCollection to load the entries. Map each entry to an object whose params contain the entry's id, and pass the entry itself as props. The build then produces one page per entry, and each page renders its entry's content.
 
-When not to create a collection: a single about page can just be a page. Binary assets like PDFs belong in public. If a remote SDK cannot work through a loader and you prefer calling it directly, that is allowed—but you give up the collections querying and validation conveniences.
+State that pipeline once more as plain steps: define the collection with a loader and schema; load entries with getCollection; convert entries to params inside getStaticPaths; the build prerenders one page per entry.
+
+Also worth knowing when a collection is the wrong tool: a single standalone page should just be a page file; static assets like PDFs belong in the public directory; and if a data source's own client library serves you better than a loader, using it directly is fine—you simply give up the collection API's validation and typing.
 
 ### How you use this idea
 
-When you have many similarly shaped documents, define a collection with a loader and schema. Query with getCollection or getEntry in pages. Generate routes explicitly. Prefer build-time collections for blogs and docs unless you truly need request-time freshness. Let the schema be strict enough to catch author mistakes early—required titles, coerced dates, optional update fields.
+Whenever you have multiple documents sharing a structure, define a collection. Make the schema strict enough to catch authoring mistakes: required titles, dates coerced into date objects, optional fields marked optional. Query with getCollection for lists and getEntry for single entries. Wire entries to URLs explicitly through a dynamic route. Default to build-time collections; use live collections only when request-time freshness is a requirement.
 
 ### Common mistakes
 
-Mistake: dropping Markdown in a folder and expecting collection APIs without defining the collection in content config.
+Mistake: putting Markdown files in a folder and calling getCollection without defining the collection in the content config. The definition—loader and registration—is required.
 
-Mistake: assuming collection files auto-create URLs.
+Mistake: expecting entries to appear as pages automatically. Routing is a separate, explicit step.
 
-Mistake: using ad-hoc glob imports everywhere instead of getCollection when you wanted validation and a shared schema.
+Mistake: importing content files ad hoc across the project when a collection would centralize the shape and validation.
 
-Mistake: choosing live collections for rarely changing docs and paying a freshness tax you do not need.
-
-Mistake: treating entry identity casually. Modern collections lean on entry ids generated from files or loaders; when you build routes, be deliberate about which identity becomes the URL param.
+Mistake: choosing live collections for content that changes rarely, paying a per-request cost for freshness nobody needs.
 
 ### [RECAP — high level]
 
-Collections organize related entries with loaders and schemas. You query with getCollection and getEntry. Collections do not auto-route; you connect them to dynamic pages. Prefer build-time collections for mostly static content. Structure first, URLs second, HTML third.
+A collection is a named set of same-shaped entries, defined once with a required loader and a recommended schema, and queried with getCollection and getEntry. Build-time collections are the default; live collections trade performance for request-time freshness. Collections do not create URLs—you connect them to a dynamic route yourself.
 
 [PAUSE]
 
 ### [REVIEW: getStaticPaths + collections]
 
-You have fifty blog posts in a build-time collection. You have one dynamic page file for posts. What does getStaticPaths return, in plain language, and where does getCollection fit?  
+From section F. Fifty posts in a build-time collection, one dynamic route file for posts. Describe what getStaticPaths returns and where getCollection fits.  
 [PAUSE]  
-getCollection loads the fifty entries. getStaticPaths maps each entry into an object with params—usually the entry id or a chosen URL identity—and often passes the entry as props. Astro prerenders fifty HTML pages from that list. The dynamic file is the mold; getStaticPaths is the list of castings; getCollection is the clay.
+Inside getStaticPaths, getCollection loads the fifty entries. The function maps each entry to an object: params containing the entry's id, and props carrying the entry. It returns that array of fifty objects, and the build prerenders fifty pages. At render, each page takes the entry from props—or fetches it with getEntry—and renders it.
 
 ---
 
 ## Section H — Closing synthesis
 
-### One story
+### One walkthrough, start to finish
 
-Let us walk a single imaginary documentation article from idea to visitor, using every major idea from this episode.
+Follow one documentation article from authoring to the visitor, using every concept from this episode.
 
-Authors write Markdown entries that share frontmatter fields: title, description, publish date. You define a collection with a glob loader and a schema so missing titles fail early at build. That is content-driven structure.
+Authors write Markdown files sharing the same frontmatter fields: title, description, publish date. You define a build-time collection: a glob loader pointing at the content folder, and a schema requiring those three fields. A missing title now fails the build instead of shipping. That is content collections.
 
-At build time—our first timeline—a dynamic route calls getCollection inside getStaticPaths, producing one path per article. Astro prerenders HTML shells: title, body, chrome from a layout component’s slot. The layout is just an Astro component: fence for imports, template for the document, slot for the page body. That is components plus routing.
+A dynamic route file in pages handles article URLs. Its getStaticPaths calls getCollection, maps each entry to params and props, and returns the list. At build time, Astro prerenders one HTML page per article. That is routing plus collections, at build time.
 
-Most of the page is a sea of HTML. Zero JavaScript by default. A small feedback widget lower on the page is a client island with client-visible, because it only needs to hydrate if someone scrolls there. A “signed-in reader” badge in the header is a server island with server-defer and a generic fallback avatar, because it is personalized HTML without needing a client framework. That is islands with the right directives.
+Each page renders inside a layout: an Astro component with the document shell and a slot for the article body. The layout and the article template are Astro components—script fence for data, template for HTML—so none of them ship JavaScript. That is components.
 
-The visitor receives content fast from prerendered HTML. Browser time stays cheap. JavaScript arrives only for the feedback widget if it appears. Personalized badge HTML arrives without blocking the article. Request time is used surgically for the server island, not as a tax on every paragraph.
+Two regions on the page are exceptions. A feedback widget near the end of the article is interactive, so it is a client island; it uses client-visible, and its JavaScript loads only if the reader scrolls that far. A signed-in badge in the header depends on the visitor's session, so it is a server island: server-defer, with a generic placeholder as fallback, filled in by request-time rendering while the rest of the page stays prerendered and cacheable. That is islands and directives, spanning request time and browser time.
 
-That is the Astro foundations story: purpose first, timeline second, components third, islands fourth, directives fifth, routes sixth, collections seventh—then the synthesis that content becomes validated entries, entries become paths, paths become HTML shells, and shells grow islands only where earned.
+The visitor gets prerendered HTML immediately. JavaScript loads for at most one widget. The personalized badge arrives separately without blocking anything. Every rendering decision maps to one of the three times: build, request, or browser.
 
 [PAUSE]
 
-### What to practice without looking at code
+### A drill to run without code
 
-Before the quiz, try this mental drill. Pick a site you use weekly. Name three regions that should be static sea, one that might be a client island, and one that might be a server island. If you cannot find a server island, that is fine—many pages need none. If you cannot find a client island, also fine—some pages are happily inert. The skill is classification, not maximizing islands.
+Pick a site you use regularly. Mentally divide one of its pages into regions. Name which regions could be static HTML, which would need a client island, and which would need a server island. Many pages need zero islands; finding none is a valid answer. The skill this builds is the classification itself.
 
 ### [REVIEW: final self-check]
 
-Three questions. Pause after each to answer yourself, then I will answer. If you miss one, rewind that section later; that is the point of spaced repetition.
+Three questions. Pause and answer each before I do. If you miss one, replay that section later.
 
-**Question one.** What problem is Astro primarily optimized for, and what does “zero JavaScript by default” mean for an Astro component?  
+**Question one.** What does zero JavaScript by default mean for an Astro component, and what kind of site is Astro optimized for?  
 [PAUSE]  
-Astro is optimized for content-driven websites. An Astro component renders to HTML without shipping an Astro client runtime; client JavaScript is opt-in for islands you explicitly hydrate.
+Astro components render to HTML at build or request time; their script runs during rendering and is never sent to the browser. Astro is optimized for content-driven sites, where delivering HTML quickly matters more than maintaining a client application runtime.
 
-**Question two.** What is the difference between a client island and a server island, and when would you choose each?  
+**Question two.** Client island versus server island—define both and give the selection rule.  
 [PAUSE]  
-A client island hydrates interactive UI in the browser with a client directive—choose it for clicks, client state, and browser APIs. A server island defers dynamic server-rendered HTML with server-defer—choose it for personalized or slow server HTML while the shell stays fast. Both are bounded; neither requires turning the whole page into an SPA.
+A client island is a UI framework component hydrated in the browser via a client directive; choose it when the region needs interactivity: input, clicks, state. A server island is a component whose server rendering is deferred via server-defer; choose it when the region needs per-request HTML but no interactivity. Regions needing neither stay static HTML.
 
-**Question three.** Why might you call getCollection inside getStaticPaths?  
+**Question three.** Why does getCollection get called inside getStaticPaths?  
 [PAUSE]  
-Because collections do not create routes by themselves. In static mode, getStaticPaths must list the pages to prerender; getCollection supplies the entries you map into params and props so each entry becomes a concrete HTML page at build time.
+Because collections do not create routes. In static output, a dynamic route must enumerate its URLs at build time through getStaticPaths. getCollection supplies the entries, and the function maps each one to a params object—usually the entry id—so the build produces one page per entry.
 
 ### Looking ahead
 
-If those answers feel solid, you have the Episode 1 mental model. Later episodes go deeper on building pages and styling, the full content layer including live collections, on-demand rendering and adapters and endpoints, and richer interactivity patterns like framework islands in practice and view transitions. You do not need them to benefit from what you just learned. You can already evaluate whether a feature belongs at build time, request time, or browser time—and that sorting skill alone will change how you design sites.
-
-Thanks for listening with your full attention—or with your eyes on the road and your ears on architecture. When you sit down to build, start from the sea of HTML, name your timelines out loud, and only then raise islands.
-
-[PAUSE]
+Later episodes cover pages and styling in depth, the full content layer including live collections, on-demand rendering with adapters, endpoints, and middleware, and interactivity patterns including view transitions. None of them are prerequisites for using what you learned here. You can already classify any feature into build time, request time, or browser time, and into static HTML, client island, or server island—and those two classifications drive most Astro design decisions.
 
 End of Episode 1.
