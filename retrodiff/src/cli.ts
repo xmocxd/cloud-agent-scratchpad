@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { diffWithOptionalAncestor } from "./engine/diff3.ts";
@@ -70,6 +71,9 @@ async function main() {
     }
     if (opts.testAbort) return;
     printWaitNote(opts);
+    const port = process.env.RETRODIFF_PORT || "4173";
+    tryOpen(`http://127.0.0.1:${port}/?dir=1`);
+    await waitUntilDismissed();
     return;
   }
 
@@ -97,22 +101,28 @@ async function main() {
   if (opts.merge) params.set("merge", opts.merge);
   const url = `http://127.0.0.1:${port}/?${params.toString()}`;
   console.error(`RetroDiff: open ${url}`);
-  if (!process.stdout.isTTY) {
-    await new Promise<void>((resolveWait) => {
-      const timer = setTimeout(resolveWait, Number(process.env.RETRODIFF_WAIT_MS || 3_600_000));
-      process.on("SIGINT", () => {
-        clearTimeout(timer);
-        resolveWait();
-      });
-      if (opts.merge) {
-        const t = setInterval(() => {
-          if (existsSync(opts.merge!) && statSync(opts.merge!).mtimeMs > Date.now() - 5000) {
-            /* still wait for explicit close in GUI; tests use --test-save */
-          }
-        }, 500);
-        process.on("exit", () => clearInterval(t));
-      }
+  tryOpen(url);
+  await waitUntilDismissed();
+}
+
+function waitUntilDismissed(): Promise<void> {
+  if (process.stdout.isTTY) return Promise.resolve();
+  return new Promise<void>((resolveWait) => {
+    const timer = setTimeout(resolveWait, Number(process.env.RETRODIFF_WAIT_MS || 3_600_000));
+    process.on("SIGINT", () => {
+      clearTimeout(timer);
+      resolveWait();
     });
+  });
+}
+
+function tryOpen(url: string): void {
+  const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
+  const args = process.platform === "win32" ? ["/c", "start", url] : [url];
+  try {
+    spawn(opener, args, { stdio: "ignore", detached: true }).unref();
+  } catch {
+    /* GUI may already be open at the printed URL */
   }
 }
 

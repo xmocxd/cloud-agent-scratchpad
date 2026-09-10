@@ -51,6 +51,7 @@ export class DiffView {
     this.rightPane.addEventListener("mousedown", () => {
       this.gutterFocused = false;
     });
+    new ResizeObserver(() => this.redraw()).observe(this.root);
     requestAnimationFrame(() => this.redraw());
   }
 
@@ -243,7 +244,6 @@ export class DiffView {
     const gw = this.gutter.getBoundingClientRect();
     const root = this.root.getBoundingClientRect();
     const leftRect = this.leftPane.getBoundingClientRect();
-    const rightRect = this.rightPane.getBoundingClientRect();
     const ls = this.leftPane.scrollTop;
     const rs = this.rightPane.scrollTop;
 
@@ -258,31 +258,24 @@ export class DiffView {
       const rt = this.hunkTop(hunk, "right") - rs;
       const lh = this.hunkHeight(hunk, "left");
       const rh = this.hunkHeight(hunk, "right");
-      const lx0 = 0;
       const lx1 = leftRect.width;
-      const rx0 = rightRect.left - root.left;
-      const rx1 = rx0 + rightRect.width;
       const gx0 = gw.left - root.left;
       const gx1 = gx0 + gw.width;
-      const fill = hunk.id === this.selectedId ? "rgba(90,140,210,0.55)" : "rgba(120,170,230,0.38)";
+      const fill = hunk.id === this.selectedId ? "rgba(140,140,150,0.5)" : "rgba(160,160,170,0.38)";
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      /* Gray warped connector through the gutter only; panes use blue hunk fills. */
       const d = [
-        `M ${lx0} ${lt}`,
-        `L ${lx1} ${lt}`,
+        `M ${lx1} ${lt}`,
         `C ${gx0} ${lt}, ${gx0} ${rt}, ${gx1} ${rt}`,
-        `L ${rx1} ${rt}`,
-        `L ${rx1} ${rt + rh}`,
         `L ${gx1} ${rt + rh}`,
         `C ${gx0} ${rt + rh}, ${gx0} ${lt + lh}, ${lx1} ${lt + lh}`,
-        `L ${lx0} ${lt + lh}`,
         "Z",
       ].join(" ");
       path.setAttribute("d", d);
       path.setAttribute("fill", fill);
-      path.setAttribute("stroke", hunk.isConflict ? "#c62828" : "rgba(80,80,90,0.25)");
-      path.setAttribute("stroke-width", hunk.id === this.selectedId || hunk.isConflict ? "2" : "0.5");
+      path.setAttribute("stroke", hunk.isConflict ? "#c62828" : "rgba(80,80,90,0.35)");
+      path.setAttribute("stroke-width", hunk.id === this.selectedId || hunk.isConflict ? "2" : "0.75");
       this.svg.append(path);
-      void rx0;
     }
     this.positionGutter(ls, rs, root, gw);
     this.drawTicks();

@@ -37,6 +37,7 @@ export class AquaWindow {
     bar.append(traffic, this.titleEl);
     this.body = el("div", { class: "window-body" });
     this.root.append(bar, this.body);
+    this.makeResizable();
 
     this.root.addEventListener("mousedown", () => this.focus());
     this.makeDraggable(bar);
@@ -73,6 +74,29 @@ export class AquaWindow {
       if (!drag) return;
       this.root.style.left = `${ox + e.clientX - sx}px`;
       this.root.style.top = `${Math.max(22, oy + e.clientY - sy)}px`;
+    });
+    window.addEventListener("mouseup", () => {
+      drag = false;
+    });
+  }
+
+  private makeResizable(): void {
+    const grip = el("div", { class: "resize-se" });
+    this.root.append(grip);
+    let sx = 0, sy = 0, sw = 0, sh = 0, drag = false;
+    grip.addEventListener("mousedown", (e) => {
+      drag = true;
+      sx = e.clientX;
+      sy = e.clientY;
+      sw = this.root.offsetWidth;
+      sh = this.root.offsetHeight;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!drag) return;
+      this.root.style.width = `${Math.max(280, sw + e.clientX - sx)}px`;
+      this.root.style.height = `${Math.max(120, sh + e.clientY - sy)}px`;
     });
     window.addEventListener("mouseup", () => {
       drag = false;

@@ -188,6 +188,10 @@ function runDirectory(desktop: HTMLElement): void {
       const name = window.prompt("Combined directory name:", "merged-dir.txt");
       if (name) downloadOrRemember(name, out.join("\n"));
     },
+    {
+      excludeIdentical: state.settings.ignoreIdenticalInDirectory,
+      onWriteFile: (name, text) => downloadOrRemember(name, text),
+    },
   );
 }
 
@@ -357,13 +361,35 @@ function menu(name: string, children: HTMLElement[]): HTMLElement {
   const popup = el("div", { class: "menu-popup" });
   popup.append(...children);
   root.append(popup);
+  root.addEventListener("mousedown", (e) => e.stopPropagation());
   root.addEventListener("click", (e) => {
     e.stopPropagation();
-    document.querySelectorAll(".menu-root").forEach((m) => m.classList.remove("open"));
+    const wasOpen = root.classList.contains("open");
+    closeMenus();
+    if (!wasOpen) root.classList.add("open");
+  });
+  root.addEventListener("mouseenter", () => {
+    if (!document.querySelector(".menu-root.open")) return;
+    closeMenus();
     root.classList.add("open");
   });
-  document.addEventListener("click", () => root.classList.remove("open"));
+  ensureMenuDismiss();
   return root;
+}
+
+function closeMenus(): void {
+  document.querySelectorAll(".menu-root.open").forEach((m) => m.classList.remove("open"));
+}
+
+let menuDismissBound = false;
+function ensureMenuDismiss(): void {
+  if (menuDismissBound) return;
+  menuDismissBound = true;
+  document.addEventListener("mousedown", (e) => {
+    const t = e.target as HTMLElement | null;
+    if (t?.closest(".menu-root")) return;
+    closeMenus();
+  });
 }
 
 function submenu(name: string, children: HTMLElement[]): HTMLElement {
@@ -383,7 +409,7 @@ function item(label: string, fn: () => void, key?: string, cmd?: boolean, shift?
   }
   it.addEventListener("click", (e) => {
     e.stopPropagation();
-    document.querySelectorAll(".menu-root").forEach((m) => m.classList.remove("open"));
+    closeMenus();
     fn();
   });
   return it;

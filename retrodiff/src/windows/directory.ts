@@ -16,6 +16,7 @@ export function openDirectoryWindow(
   onViewComparison: (rel: string, leftText: string, rightText: string) => void,
   onViewFile: (title: string, text: string) => void,
   onCombine: (picked: DirEntry[]) => void,
+  opts?: { excludeIdentical?: boolean; onWriteFile?: (name: string, text: string) => void },
 ): AquaWindow {
   const win = new AquaWindow({
     title: "Directory Compare",
@@ -26,10 +27,16 @@ export function openDirectoryWindow(
   });
   win.body.style.padding = "0";
   win.body.style.minHeight = "0";
+  win.body.style.overflow = "hidden";
   win.body.style.display = "flex";
   win.body.style.flexDirection = "column";
 
-  const excl: ExcludeSet = { identical: false, modified: false, addedLeft: false, addedRight: false };
+  const excl: ExcludeSet = {
+    identical: Boolean(opts?.excludeIdentical),
+    modified: false,
+    addedLeft: false,
+    addedRight: false,
+  };
   let selected: DirEntry | null = null;
   const picked = new Set<string>();
 
@@ -48,6 +55,7 @@ export function openDirectoryWindow(
   for (const [label, key] of boxes) {
     const lab = el("label");
     const cb = el("input", { type: "checkbox" }) as HTMLInputElement;
+    cb.checked = excl[key];
     cb.addEventListener("change", () => {
       excl[key] = cb.checked;
       renderList();
@@ -58,9 +66,7 @@ export function openDirectoryWindow(
 
   const viewBtn = el("div", { class: "popup-label" });
   viewBtn.append(el("span", { text: "View" }), el("span", { text: "▾" }));
-  const viewMenu = el("select") as HTMLSelectElement;
-  viewMenu.style.position = "absolute";
-  viewMenu.style.opacity = "0";
+  const viewMenu = el("select", { class: "overlay-select" }) as HTMLSelectElement;
   viewMenu.innerHTML = `
     <option>View</option>
     <option value="comparison">Comparison</option>
@@ -69,13 +75,8 @@ export function openDirectoryWindow(
     <option value="ancestor">Ancestor</option>
     <option value="merge">Merge</option>
   `;
-  viewBtn.style.position = "relative";
   viewBtn.append(viewMenu);
-  viewMenu.addEventListener("mousedown", () => {
-    viewBtn.querySelector("span")!.textContent = "";
-  });
   viewMenu.addEventListener("change", () => {
-    viewBtn.querySelector("span")!.textContent = "View";
     const v = viewMenu.value;
     viewMenu.value = "View";
     if (!selected) return;
@@ -84,15 +85,12 @@ export function openDirectoryWindow(
       onViewComparison(selected.rel, rec.left, rec.right);
     } else if (v === "left" && rec.left != null) onViewFile(selected.rel + " (left)", rec.left);
     else if (v === "right" && rec.right != null) onViewFile(selected.rel + " (right)", rec.right);
+    else if (v === "ancestor" || v === "merge") onViewFile(selected.rel + ` (${v})`, rec.left ?? rec.right ?? "");
   });
 
   const mergeBtn = el("div", { class: "popup-label" });
-  mergeBtn.style.position = "relative";
   mergeBtn.append(el("span", { text: "Merge" }), el("span", { text: "▾" }));
-  const mergeMenu = el("select") as HTMLSelectElement;
-  mergeMenu.style.position = "absolute";
-  mergeMenu.style.inset = "0";
-  mergeMenu.style.opacity = "0";
+  const mergeMenu = el("select", { class: "overlay-select" }) as HTMLSelectElement;
   mergeMenu.innerHTML = `
     <option>Merge</option>
     <option value="combine">Combine Files</option>
@@ -102,18 +100,25 @@ export function openDirectoryWindow(
     <option value="drop">Remove incomparable</option>
   `;
   mergeBtn.append(mergeMenu);
-  mergeMenu.addEventListener("mousedown", () => {
-    mergeBtn.querySelector("span")!.textContent = "";
-  });
   mergeMenu.addEventListener("change", () => {
-    mergeBtn.querySelector("span")!.textContent = "Merge";
     const v = mergeMenu.value;
     mergeMenu.value = "Merge";
     const items = entries.filter((e) => picked.has(e.rel) || e.rel === selected?.rel);
     if (v === "combine") onCombine(items.length ? items : filterEntries(entries, excl));
+    if ((v === "left" || v === "right") && selected) {
+      const rec = contents.get(selected.rel) ?? {};
+      const body = v === "left" ? rec.left : rec.right;
+      if (body != null) opts?.onWriteFile?.(selected.rel, body);
+    }
     if (v === "remove" && selected) {
       const i = entries.indexOf(selected);
       if (i >= 0) entries.splice(i, 1);
+      renderList();
+    }
+    if (v === "drop") {
+      for (let i = entries.length - 1; i >= 0; i--) {
+        if (entries[i].status === "added-left" || entries[i].status === "added-right") entries.splice(i, 1);
+      }
       renderList();
     }
   });

@@ -31,12 +31,13 @@ export function openComparisonWindow(
     onSave: (text: string, asCopy: boolean) => void;
   },
 ): { win: AquaWindow; view: DiffView; session: ComparisonSession } {
+  const deskH = desktop.clientHeight || 640;
   const win = new AquaWindow({
     title: `${fileName(session.leftPath)} vs ${fileName(session.rightPath)}`,
-    x: 36,
-    y: 36,
-    w: 920,
-    h: 560,
+    x: 28,
+    y: 28,
+    w: Math.min(960, Math.max(720, (desktop.clientWidth || 960) - 48)),
+    h: Math.min(600, Math.max(440, deskH - 36)),
     onClose: () => {
       if (touchedHunks(session.hunks, session.original) || mergeEdited) {
         const r = confirmSave();
@@ -47,6 +48,7 @@ export function openComparisonWindow(
     },
   });
   win.body.style.padding = "0";
+  win.body.style.overflow = "hidden";
   win.body.style.display = "flex";
   win.body.style.flexDirection = "column";
   win.body.style.minHeight = "0";
@@ -63,10 +65,10 @@ export function openComparisonWindow(
   view.setWrap(settings.wrapText);
 
   let mergeEdited = false;
-  let mergeHeight = 0;
+  let mergeHeight = Math.min(168, Math.max(120, Math.floor((desktop.clientHeight || 640) * 0.26)));
   const split = el("div", { class: "merge-split" });
   const drawer = el("div", { class: "merge-drawer" });
-  drawer.style.height = "0px";
+  drawer.style.height = `${mergeHeight}px`;
   drawer.style.overflow = "hidden";
   const ta = el("textarea") as HTMLTextAreaElement;
   ta.style.fontFamily = settings.fontFamily;
@@ -133,6 +135,8 @@ export function openComparisonWindow(
   root.append(headers, view.root, split, drawer);
   win.body.append(root);
   desktop.append(win.root);
+  win.root.tabIndex = 0;
+  win.root.focus();
 
   const first = changeHunks(session.hunks)[0];
   if (first) view.select(first.id);

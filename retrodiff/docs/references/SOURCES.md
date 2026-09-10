@@ -1,4 +1,4 @@
-# FileMerge look-and-feel references (public articles; do not copy Apple binaries)
+Public walkthroughs (layout/screenshots). Do not copy Apple binaries, icons, or About boxes into this tree — compare visually against the live articles.
 
 - https://appleinsider.com/inside/xcode/tips/how-to-use-xcodes-filemerge-tool-to-compare-files
 - https://anoved.net/2008/01/file-comparison-with-filemerge/

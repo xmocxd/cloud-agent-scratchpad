@@ -3,6 +3,7 @@ import { applyChoice, buildMerge, changeHunks, diffLines, splitLines } from "./d
 import { diff3Lines } from "./diff3.ts";
 import { compareTrees, filterEntries, shouldIgnore, statusLabel } from "./directory.ts";
 import { extractFunctions } from "./functions.ts";
+import { applyFilterCommand } from "./settings.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,8 +125,15 @@ describe("functions", () => {
   });
 });
 
+describe("filters", () => {
+  it("substitutes $(FILE) in preprocessor commands", () => {
+    expect(applyFilterCommand("cat $(FILE)", "/tmp/a.txt")).toBe("cat /tmp/a.txt");
+  });
+});
+
 describe("splitLines", () => {
   it("drops a trailing empty split from a final newline", () => {
     expect(splitLines("a\nb\n")).toEqual(["a", "b"]);
   });
 });
+

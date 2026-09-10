@@ -52,10 +52,11 @@ Start `npm run dev` before GUI mergetool sessions. Piped stdout waits (Git’s `
 
 ```bash
 npm run build
+npx tauri icon public/icon.svg   # optional: regenerate icns/ico from the original SVG
 npx tauri build
 ```
 
-Requires platform WebView (WebKitGTK on Linux, WebView2 on Windows). See `src-tauri/tauri.conf.json`.
+Requires platform WebView (WebKitGTK on Linux, WebView2 on Windows). See `src-tauri/tauri.conf.json`. Bundles: `.app` (macOS), `.msi`/`.exe` (Windows), `.deb`/`.AppImage` (Linux). This Linux cloud image may lack WebKitGTK; the Vite UI is the verification path here.
 
 ## Keyboard
 

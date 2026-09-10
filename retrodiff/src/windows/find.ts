@@ -11,6 +11,9 @@ export function openFindWindow(desktop: HTMLElement): AquaWindow {
   const prev = el("button", { text: "Previous" });
   row.append(next, prev);
   win.body.append(el("div", { text: "Find:" }), input, row);
+  input.addEventListener("input", () => {
+    (window as unknown as { __find?: string }).__find = input.value;
+  });
 
   function hunt(dir: 1 | -1) {
     const q = input.value;

@@ -76,7 +76,8 @@ html, body {
   padding: 4px 0;
   z-index: 2000;
 }
-.menu-root.open .menu-popup { display: block; }
+.menu-root.open > .menu-popup { display: block; }
+.menu-sub:hover > .menu-popup { display: block; }
 .menu-item, .menu-check {
   display: flex;
   justify-content: space-between;
@@ -108,6 +109,7 @@ html, body {
   flex-direction: column;
   min-width: 280px;
   min-height: 120px;
+  overflow: hidden;
 }
 .window.focused { box-shadow: 0 10px 28px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.5) inset; }
 
@@ -151,6 +153,7 @@ html, body {
   flex: 1;
   padding: 10px 12px;
   overflow: auto;
+  min-height: 0;
 }
 
 .row {
@@ -195,7 +198,9 @@ textarea {
   padding: 6px;
   font-family: var(--mono);
   resize: none;
+  user-select: text;
 }
+input[type="text"] { user-select: text; }
 
 .path-field { flex: 1; min-width: 0; }
 
@@ -231,14 +236,25 @@ textarea {
   cursor: ns-resize;
   flex-shrink: 0;
 }
+.resize-se {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  z-index: 6;
+}
 
 /* Comparison */
 .diff-root {
   display: flex;
   flex-direction: column;
   height: 100%;
+  flex: 1;
   min-height: 0;
   background: #f0f0f0;
+  overflow: hidden;
 }
 .diff-headers {
   display: grid;
@@ -263,6 +279,7 @@ textarea {
   min-height: 0;
   position: relative;
   background: white;
+  overflow: hidden;
 }
 .pane {
   overflow: auto;
@@ -272,6 +289,8 @@ textarea {
   line-height: 16px;
   white-space: pre;
   user-select: text;
+  min-height: 0;
+  height: 100%;
 }
 .pane.wrap { white-space: pre-wrap; word-break: break-all; }
 .pane .line {
@@ -323,7 +342,7 @@ textarea {
 }
 
 .merge-split {
-  height: 7px;
+  height: 14px;
   background: linear-gradient(180deg, #d8d8d8, #b8b8b8);
   border-top: 1px solid #888;
   border-bottom: 1px solid #888;
@@ -334,11 +353,10 @@ textarea {
   flex-shrink: 0;
 }
 .merge-split::after {
-  content: "";
-  width: 28px;
-  height: 4px;
-  border-radius: 2px;
-  background: #888;
+  content: "merge preview";
+  font-size: 10px;
+  color: #555;
+  letter-spacing: 0.04em;
 }
 
 .merge-drawer {
@@ -355,6 +373,7 @@ textarea {
   box-shadow: none;
   font-size: 11px;
   line-height: 16px;
+  min-height: 72px;
 }
 .merge-bar {
   display: flex;
@@ -363,6 +382,7 @@ textarea {
   gap: 8px;
   padding: 4px 8px;
   border-top: 1px solid #bbb;
+  flex-shrink: 0;
 }
 .merge-bar label { font-size: 12px; }
 
@@ -394,7 +414,7 @@ textarea {
   gap: 8px;
 }
 .exclude-box { border: 1px solid #bbb; padding: 8px; background: #f6f6f6; }
-.exclude-box h4 { margin: 0 0 6px; font-size: 12px; font-weight: 600; }
+.exclude-box label { display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; }
 .popup-label {
   height: 22px;
   display: flex;
@@ -404,6 +424,17 @@ textarea {
   border: 1px solid var(--aqua-btn-border);
   border-radius: 4px;
   background: var(--aqua-btn);
+  position: relative;
+  overflow: hidden;
+}
+.popup-label select.overlay-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: default;
+  margin: 0;
 }
 .dir-status { font-size: 11px; color: #444; margin-top: auto; }
 
