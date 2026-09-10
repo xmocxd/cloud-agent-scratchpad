@@ -1,0 +1,24 @@
+{
+  "name": "retrodiff",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-platform visual diff and merge tool compatible with Git's opendiff mergetool protocol",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4173",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test": "vitest run",
+    "test:rust": "cargo test --manifest-path core/Cargo.toml",
+    "opendiff": "node bin/opendiff.mjs",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "@types/node": "^22.20.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  }
+}
